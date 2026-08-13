@@ -1,7 +1,7 @@
 # 환경 변수 구성
 
 1. `workspace/src/config/config.js`의 환경 변수 schema와 변환을 완성합니다.
-2. `workspace/package.json`에 `engines.node`를 `>=26 <27`, `engines.npm`을 `>=11`로 먼저 설정합니다. `dev`는 `node --watch --env-file-if-exists=./env/.env.development src/server.js`, `start`는 `node --env-file-if-exists=./env/.env.production src/server.js`로 선언합니다.
+2. `workspace/package.json`에 `engines.node`를 `>=26 <27`, `engines.npm`을 `>=11`로 먼저 설정합니다. `dev`는 `node --watch --env-file-if-exists=./env/.env.development src/server.js`, `start`는 `node --env-file-if-exists=./env/.env.production src/server.js`로 선언합니다. 제공된 `format`·`format:check` script, 정확히 고정된 Prettier devDependency와 `.prettierrc`는 유지합니다.
 3. `cd src/practices/08-env-config/workspace`에서 `npm install zod@4.4.3`을 실행해 package와 lockfile을 함께 갱신합니다.
 4. `workspace/.gitignore`에는 `env/*`로 환경 파일을 제외하고 `!env/.env.example`로 예시 파일만 다시 포함합니다. `workspace/env/.env.example`은 `NODE_ENV=development`와 `PORT=5001`을 담도록 완성합니다. 실제 `.env.development`와 `.env.production`은 만들더라도 Git에 포함하지 않습니다.
 

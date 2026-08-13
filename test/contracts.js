@@ -487,6 +487,7 @@ export function registerContracts(candidates, selectedUnit) {
     const packageLock = readJson(
       new URL('package-lock.json', candidates.envConfig.workspace),
     );
+    const prettier = readJson(candidates.envConfig.prettierConfig);
     const gitignore = readFileSync(
       new URL('.gitignore', candidates.envConfig.workspace),
       'utf8',
@@ -503,17 +504,34 @@ export function registerContracts(candidates, selectedUnit) {
       packageJson.scripts.start,
       'node --env-file-if-exists=./env/.env.production src/server.js',
     );
+    assert.equal(
+      packageJson.scripts.format,
+      'prettier --write . --ignore-unknown',
+    );
+    assert.equal(
+      packageJson.scripts['format:check'],
+      'prettier --check . --ignore-unknown',
+    );
     assert.deepEqual(packageJson.engines, {
       node: '>=26 <27',
       npm: '>=11',
     });
     assert.equal(packageJson.dependencies?.zod, '^4.4.3');
+    assert.equal(packageJson.devDependencies?.prettier, '3.9.6');
     assert.equal(packageLock.lockfileVersion, 3);
     assert.deepEqual(packageLock.packages[''].engines, {
       node: '>=26 <27',
       npm: '>=11',
     });
     assert.equal(packageLock.packages[''].dependencies.zod, '^4.4.3');
+    assert.equal(packageLock.packages[''].devDependencies.prettier, '3.9.6');
+    assert.deepEqual(prettier, {
+      printWidth: 80,
+      bracketSpacing: true,
+      trailingComma: 'all',
+      semi: true,
+      singleQuote: true,
+    });
     assert.match(gitignore, /env\/\*/);
     assert.match(gitignore, /!env\/\.env\.example/);
     assert.match(example, /NODE_ENV=development/);

@@ -93,6 +93,7 @@ if (includes('08')) {
     parseConfig,
     moduleUrl: new URL('workspace/src/config/config.js', root),
     workspace: new URL('workspace/', root),
+    prettierConfig: new URL('workspace/.prettierrc', root),
     validFixture: new URL('fixtures/env/valid.env', root),
     invalidFixtures: [
       new URL('fixtures/env/invalid-node-env.env', root),

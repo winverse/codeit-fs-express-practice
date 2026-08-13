@@ -101,6 +101,7 @@ registerContracts({
       import.meta.url,
     ),
     workspace: new URL('answers/workspace/', envRoot),
+    prettierConfig: new URL('answers/workspace/.prettierrc', envRoot),
     validFixture: new URL('fixtures/env/valid.env', envRoot),
     invalidFixtures: [
       new URL('fixtures/env/invalid-node-env.env', envRoot),
