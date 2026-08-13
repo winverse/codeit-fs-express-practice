@@ -4,10 +4,9 @@ export function createRequestTimer({
 } = {}) {
   return (_req, res, next) => {
     trace('timer');
-    const startedAt = process.hrtime.bigint();
+    const startedAt = Date.now();
     res.on('finish', () => {
-      const elapsedMs = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
-      write(`completed in ${elapsedMs.toFixed(2)}ms`);
+      write(`completed in ${Date.now() - startedAt}ms`);
     });
     next();
   };

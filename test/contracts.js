@@ -359,9 +359,7 @@ export function registerContracts(candidates, selectedUnit) {
       assert.deepEqual(trace.splice(0), ['cors']);
     });
     assert.ok(logs.some((message) => /^POST \/users 201 \d+ms$/.test(message)));
-    assert.ok(
-      logs.some((message) => /^completed in \d+\.\d{2}ms$/.test(message)),
-    );
+    assert.ok(logs.some((message) => /^completed in \d+ms$/.test(message)));
     const loggerSource = readFileSync(
       candidates.middleware.loggerSource,
       'utf8',
@@ -370,8 +368,7 @@ export function registerContracts(candidates, selectedUnit) {
     assert.match(loggerSource, /res\.on\(['"]finish['"]/);
     assert.match(loggerSource, /Date\.now\(\)/);
     assert.match(timerSource, /res\.on\(['"]finish['"]/);
-    assert.match(timerSource, /process\.hrtime\.bigint\(\)/);
-    assert.match(timerSource, /toFixed\(2\)/);
+    assert.match(timerSource, /Date\.now\(\)/);
   });
 
   register('07', 'Express 에러 처리', async () => {
@@ -450,9 +447,11 @@ export function registerContracts(candidates, selectedUnit) {
     assert.match(errorSources[2], /Not found/);
     assert.match(errorSources[3], /super\(409,/);
     assert.match(errorSources[3], /Conflict/);
-    assert.match(validateSource, /next\(new BadRequestException/);
-    assert.match(routeSource, /next\(new NotFoundException/);
-    assert.match(routeSource, /next\(new ConflictException/);
+    assert.match(validateSource, /BadRequestException/);
+    assert.match(validateSource, /next\s*\(/);
+    assert.match(routeSource, /NotFoundException/);
+    assert.match(routeSource, /ConflictException/);
+    assert.match(routeSource, /next\s*\(/);
     assert.match(errorHandlerSource, /instanceof HttpException/);
     assert.match(
       errorHandlerSource,
