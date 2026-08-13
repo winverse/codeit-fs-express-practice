@@ -12,8 +12,8 @@
 - `GET /users/123` → 200 `{ "userId": "123" }`
 - `GET /search?q=express&limit=10` → 200 `{ "query": "express", "limit": 10 }`; 생략 시 `{ "query": "", "limit": 20 }`, 숫자가 아니거나 여러 번 전달된 값은 400
 - `GET /users/1/posts/20` → 200 `{ "userId": "1", "postId": "20" }`
-- `POST /users`의 body `{ "name": "Alice", "email": "alice@example.com" }` → 201 `{ "user": body }`; 빈·누락·잘못된 JSON은 400 JSON
-- `PUT /users/7`의 body `{ "name": "Alicia" }` → 200 `{ "userId": "7", "updates": body }`; 빈 body는 400
+- `POST /users`의 body `{ "name": "Alice", "email": "alice@example.com" }` → 201 `{ "user": body }`; 빈·누락 body → 400 `{ "message": "Name and email are required" }`; malformed JSON → 400 `{ "message": "Malformed JSON body" }`
+- `PUT /users/7`의 body `{ "name": "Alicia" }` → 200 `{ "userId": "7", "updates": body }`; 빈 body → 400 `{ "message": "Updates are required" }`
 - `DELETE /users/7` → 200 `{ "message": "User deleted", "userId": "7" }`; 알 수 없는 경로는 404
 
 `npm run check:03`이 모든 method·path·입력·상태·Content-Type·본문을 확인합니다.

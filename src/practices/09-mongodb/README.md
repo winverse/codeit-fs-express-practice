@@ -8,7 +8,8 @@
 
 - 테스트가 매번 만드는 `express_practice` DB를 fixture 사용자 2명으로 reset하고 고유 index를 준비합니다. 개인 Atlas나 기존 로컬 DB에 의존하지 않습니다.
 - `GET /users` → 200 `{ "users": [...] }`; `POST /users`의 `{ "name": "Carol", "email": "carol@example.com" }` → 201과 ObjectId가 있는 `{ "user": ... }`
-- 빈·누락·malformed JSON, 빈 PATCH body, 잘못된 ObjectId → 400 JSON; 없는 문서 → 404; 중복 email과 고유 index 오류 → 409
+- 빈·누락 body → 400 `{ "message": "Name and email are required" }`; malformed JSON → 400 `{ "message": "Malformed JSON body" }`; 빈 PATCH body → 400 `{ "message": "Updates are required" }`; 잘못된 ObjectId → 400 `{ "message": "Invalid user id" }`
+- 없는 문서 → 404 `{ "message": "User not found" }`; 중복 email과 고유 index 오류 → 409 `{ "message": "Email already exists" }`
 - 생성 문서는 재연결 후에도 유지되고 수정·삭제 전후 문서 수와 값이 맞아야 합니다. 예상 밖 DB 오류는 내부 message·stack을 숨긴 500 JSON입니다.
 - `startServer()`는 DB 연결→index 준비→HTTP listen 순서로 시작합니다. 정상 종료는 HTTP→DB 순서이며, 점유 포트·범위 밖 포트·index 준비 실패를 포함한 모든 시작 실패에서 DB 연결과 열린 server handle이 남지 않습니다.
 
