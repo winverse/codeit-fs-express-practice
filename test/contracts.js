@@ -428,6 +428,32 @@ export function registerContracts(candidates, selectedUnit) {
       await candidates.mongodb.User.deleteMany({});
       await candidates.mongodb.User.insertMany(candidates.mongodb.fixture);
 
+      assert.equal(
+        candidates.mongodb.User.schema.path('name').options.required,
+        true,
+      );
+      assert.equal(
+        candidates.mongodb.User.schema.path('name').options.trim,
+        true,
+      );
+      assert.equal(
+        candidates.mongodb.User.schema.path('email').options.required,
+        true,
+      );
+      assert.equal(
+        candidates.mongodb.User.schema.path('email').options.trim,
+        true,
+      );
+      assert.equal(
+        candidates.mongodb.User.schema.path('email').options.lowercase,
+        true,
+      );
+      assert.equal(
+        candidates.mongodb.User.schema.path('email').options.unique,
+        true,
+      );
+      assert.equal(candidates.mongodb.User.schema.options.timestamps, true);
+
       await withServer(candidates.mongodb.createApp(), async (api) => {
         const initial = await api.get('/users').expect(200);
         assert.equal(initial.body.users.length, 2);
@@ -442,9 +468,19 @@ export function registerContracts(candidates, selectedUnit) {
           .expect(400, { message: 'Malformed JSON body' });
         const created = await api
           .post('/users')
-          .send({ name: 'Carol', email: 'carol@example.com' })
+          .send({ name: ' Carol ', email: 'CAROL@EXAMPLE.COM ' })
           .expect(201);
         assert.ok(mongoose.isValidObjectId(created.body.user._id));
+        assert.equal(created.body.user.name, 'Carol');
+        assert.equal(created.body.user.email, 'carol@example.com');
+        assert.equal(
+          new Date(created.body.user.createdAt).toISOString(),
+          created.body.user.createdAt,
+        );
+        assert.equal(
+          new Date(created.body.user.updatedAt).toISOString(),
+          created.body.user.updatedAt,
+        );
 
         await candidates.mongodb.disconnectDB();
         assert.equal(mongoose.connection.readyState, 0);

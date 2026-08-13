@@ -16,4 +16,4 @@
 - `PUT /users/7`의 body `{ "name": "Alicia" }` → 200 `{ "userId": "7", "updates": body }`; 빈 body → 400 `{ "message": "Updates are required" }`
 - `DELETE /users/7` → 200 `{ "message": "User deleted", "userId": "7" }`; 알 수 없는 경로는 404
 
-`npm run check:03`이 모든 method·path·입력·상태·Content-Type·본문을 확인합니다.
+`npm run check:03`이 모든 method·path·입력·상태·Content-Type·본문과 확인 뒤 테스트 서버 종료를 검사합니다.
