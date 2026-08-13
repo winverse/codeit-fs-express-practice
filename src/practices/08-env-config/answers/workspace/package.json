@@ -1,0 +1,17 @@
+{
+  "name": "express-env-practice",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=./env/.env.development src/server.js",
+    "start": "node --env-file-if-exists=./env/.env.production src/server.js"
+  },
+  "engines": {
+    "node": ">=26 <27",
+    "npm": ">=11"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  }
+}

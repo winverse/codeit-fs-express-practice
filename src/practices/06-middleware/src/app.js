@@ -1,0 +1,23 @@
+import express from 'express';
+import { createCors } from './middlewares/cors.js';
+import { createLogger } from './middlewares/logger.js';
+import { createRequestTimer } from './middlewares/requestTimer.js';
+import { createUsersRouter } from './routes/users.js';
+
+export function createApp(options = {}) {
+  const app = express();
+
+  app.use(express.json());
+  app.use(createCors(options));
+  app.use(createLogger(options));
+  app.use(createRequestTimer(options));
+  app.use('/users', createUsersRouter(options));
+  app.use((error, _req, res, next) => {
+    if (error instanceof SyntaxError && error.status === 400) {
+      return res.status(400).json({ message: 'Malformed JSON body' });
+    }
+    return next(error);
+  });
+
+  return app;
+}

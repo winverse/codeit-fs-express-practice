@@ -1,0 +1,23 @@
+{
+  "name": "express-practice-setup",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "lint": "eslint \"src/**/*.js\"",
+    "format:check": "prettier --check . --ignore-unknown"
+  },
+  "engines": {
+    "node": ">=26 <27",
+    "npm": ">=11"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.1",
+    "prettier": "3.9.6"
+  }
+}
