@@ -8,7 +8,7 @@
 
 - 테스트가 매번 만드는 `express_practice` DB를 fixture 사용자 2명으로 reset하고 고유 index를 준비합니다. 개인 Atlas나 기존 로컬 DB에 의존하지 않습니다.
 - `GET /users` → email 오름차순의 200 `{ "users": [...] }`; `POST /users`의 `{ "name": " Carol ", "email": "CAROL@EXAMPLE.COM " }` → 201과 ObjectId·`createdAt`·`updatedAt`이 있고 name·email이 `Carol`·`carol@example.com`으로 정규화된 `{ "user": ... }`
-- `GET /users/:userId` → 200 `{ "user": ... }`; `PATCH /users/:userId`의 `{ "name": "Caroline" }` → 200과 수정된 `{ "user": ... }`; `DELETE /users/:userId` → 200 `{ "message": "User deleted", "user": ... }`
+- `GET /users/:userId` → 200 `{ "user": ... }`; `PATCH /users/:userId`의 `{ "name": "Caroline" }` → 200과 수정된 `{ "user": ... }`; 이때 `findByIdAndUpdate()`는 `{ runValidators: true, returnDocument: 'after' }`를 사용하고 deprecated `new: true`는 사용하지 않습니다. `DELETE /users/:userId` → 200 `{ "message": "User deleted", "user": ... }`
 - 빈·누락 body → 400 `{ "message": "Name and email are required" }`; malformed JSON → 400 `{ "message": "Malformed JSON body" }`; 빈 PATCH body → 400 `{ "message": "Updates are required" }`; 잘못된 ObjectId → 400 `{ "message": "Invalid user id" }`
 - 없는 문서 → 404 `{ "message": "User not found" }`; 생성·수정의 빈 필수 값과 Mongoose validation 오류 → 400 `{ "message": "Name and email are required" }`; 생성·수정의 중복 email과 고유 index 오류 → 409 `{ "message": "Email already exists" }`
 - 생성 문서는 재연결 후에도 유지되고 수정·삭제 전후 문서 수와 값이 맞아야 합니다. 예상 밖 DB 오류 → 500 `{ "message": "Internal server error" }`이며 내부 message·stack을 노출하지 않습니다.

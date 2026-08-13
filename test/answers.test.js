@@ -114,6 +114,10 @@ registerContracts({
     disconnectDB,
     User,
     startServer,
+    routeSource: new URL(
+      '../src/practices/09-mongodb/answers/src/routes/users.js',
+      import.meta.url,
+    ),
     fixture: mongoFixture,
   },
 });

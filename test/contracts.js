@@ -589,6 +589,18 @@ export function registerContracts(candidates, selectedUnit) {
   });
 
   register('09', 'MongoDB 연동', async () => {
+    const routeSource = readFileSync(candidates.mongodb.routeSource, 'utf8');
+    assert.match(
+      routeSource,
+      /returnDocument\s*:\s*['"]after['"]/,
+      "PATCH must use returnDocument: 'after'",
+    );
+    assert.doesNotMatch(
+      routeSource,
+      /\bnew\s*:\s*true\b/,
+      'PATCH must not use deprecated new: true',
+    );
+
     const mongod = await MongoMemoryServer.create();
     const uri = mongod.getUri('express_practice');
     try {

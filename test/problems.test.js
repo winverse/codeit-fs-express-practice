@@ -124,6 +124,10 @@ if (includes('09')) {
     disconnectDB: database.disconnectDB,
     User: model.User,
     startServer: lifecycle.startServer,
+    routeSource: new URL(
+      '../src/practices/09-mongodb/src/routes/users.js',
+      import.meta.url,
+    ),
     fixture,
   };
 }
