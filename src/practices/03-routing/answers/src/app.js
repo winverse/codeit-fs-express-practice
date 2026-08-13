@@ -47,6 +47,9 @@ export function createApp() {
       .status(200)
       .json({ message: 'User deleted', userId: req.params.userId });
   });
+  app.use((_req, res) => {
+    res.status(404).json({ message: 'Route not found' });
+  });
   app.use((error, _req, res, next) => {
     if (error instanceof SyntaxError && error.status === 400) {
       return res.status(400).json({ message: 'Malformed JSON body' });

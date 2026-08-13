@@ -111,7 +111,10 @@ export function registerContracts(candidates, selectedUnit) {
         new Date(root.body.timestamp).toISOString(),
         root.body.timestamp,
       );
-      await api.get('/missing').expect(404);
+      await api
+        .get('/missing')
+        .expect('Content-Type', /json/)
+        .expect(404, { message: 'Route not found' });
     });
   });
 
@@ -125,6 +128,7 @@ export function registerContracts(candidates, selectedUnit) {
       await api.get('/search').expect(200, { query: '', limit: 20 });
       for (const query of [
         'limit=not-a-number',
+        'limit=Infinity',
         'limit=0',
         'limit=-1',
         'limit=1&limit=2',
@@ -166,7 +170,10 @@ export function registerContracts(candidates, selectedUnit) {
         message: 'User deleted',
         userId: '7',
       });
-      await api.get('/unknown').expect(404);
+      await api
+        .get('/unknown')
+        .expect('Content-Type', /json/)
+        .expect(404, { message: 'Route not found' });
     });
   });
 
@@ -181,6 +188,7 @@ export function registerContracts(candidates, selectedUnit) {
       await api.get('/search').expect(200, { query: '', limit: 20 });
       for (const query of [
         'limit=not-a-number',
+        'limit=Infinity',
         'limit=0',
         'limit=-1',
         'limit=1&limit=2',
@@ -190,14 +198,20 @@ export function registerContracts(candidates, selectedUnit) {
           message: 'Invalid query',
         });
       }
-      await api.get('/missing').expect(404);
+      await api
+        .get('/missing')
+        .expect('Content-Type', /json/)
+        .expect(404, { message: 'Route not found' });
     });
 
     const appSource = readFileSync(candidates.routerSplit.appSource, 'utf8');
     const routeSources = candidates.routerSplit.routeSources.map((url) =>
       readFileSync(url, 'utf8'),
     );
-    assert.doesNotMatch(appSource, /app\.get\s*\(/);
+    assert.doesNotMatch(
+      appSource,
+      /app\.(?:get|post|put|patch|delete|route|all)\s*\(/,
+    );
     assert.match(appSource, /app\.use\s*\(/);
     assert.ok(routeSources.every((source) => /Router/.test(source)));
     assert.ok(routeSources.some((source) => /\.get\s*\(/.test(source)));
@@ -211,9 +225,14 @@ export function registerContracts(candidates, selectedUnit) {
       const invalid = await api
         .post('/users')
         .send({ name: 'Missing email' })
-        .expect(400);
-      assert.match(invalid.body.message, /required/i);
-      await api.post('/users').expect(400);
+        .expect('Content-Type', /json/)
+        .expect(400, { message: 'Name and email are required' });
+      assert.deepEqual(invalid.body, {
+        message: 'Name and email are required',
+      });
+      await api.post('/users').expect(400, {
+        message: 'Name and email are required',
+      });
       await api
         .post('/users')
         .set('Content-Type', 'application/json')
@@ -224,20 +243,30 @@ export function registerContracts(candidates, selectedUnit) {
       const created = await api
         .post('/users')
         .send({ name: 'Carol', email: 'carol@example.com' })
-        .expect(201);
-      assert.equal(created.body.user.id, 3);
+        .expect(201, {
+          user: { id: 3, name: 'Carol', email: 'carol@example.com' },
+        });
 
       await api.get('/users/3').expect(200, { user: created.body.user });
-      const updated = await api
+      await api
         .patch('/users/3')
         .send({ name: 'Caroline' })
-        .expect(200);
-      assert.equal(updated.body.user.name, 'Caroline');
+        .expect(200, {
+          user: { id: 3, name: 'Caroline', email: 'carol@example.com' },
+        });
       await api.patch('/users/3').expect(400, {
         message: 'Updates are required',
       });
-      await api.delete('/users/3').expect(200);
-      await api.get('/users/3').expect(404);
+      await api.delete('/users/3').expect(200, {
+        message: 'User deleted',
+        user: { id: 3, name: 'Caroline', email: 'carol@example.com' },
+      });
+      await api.get('/users/3').expect(404, { message: 'User not found' });
+      await api
+        .patch('/users/999')
+        .send({ name: 'Missing' })
+        .expect(404, { message: 'User not found' });
+      await api.delete('/users/999').expect(404, { message: 'User not found' });
       const final = await api.get('/users').expect(200);
       assert.equal(final.body.users.length, 2);
     });
@@ -272,7 +301,10 @@ export function registerContracts(candidates, selectedUnit) {
       assert.equal(success.body.user.email, 'alice@example.com');
       assert.deepEqual(trace.splice(0), ['cors', 'logger', 'timer', 'route']);
 
-      await api.post('/users').send({ name: 'Missing email' }).expect(400);
+      await api
+        .post('/users')
+        .send({ name: 'Missing email' })
+        .expect(400, { message: 'Name and email are required' });
       assert.deepEqual(trace.splice(0), ['cors', 'logger', 'timer']);
 
       await api.post('/users').expect(400);
@@ -295,7 +327,7 @@ export function registerContracts(candidates, selectedUnit) {
         .set('Content-Type', 'application/json')
         .send('{"name":')
         .expect('Vary', /Origin/)
-        .expect(403);
+        .expect(403, { message: 'Origin is not allowed' });
       assert.deepEqual(trace.splice(0), ['cors']);
 
       const noOrigin = await api
@@ -323,7 +355,7 @@ export function registerContracts(candidates, selectedUnit) {
         .post('/users')
         .set('Origin', 'https://evil.example')
         .send({ name: 'Alice', email: 'alice@example.com' })
-        .expect(403);
+        .expect(403, { message: 'Origin is not allowed' });
       assert.deepEqual(trace.splice(0), ['cors']);
     });
     assert.ok(logs.some((message) => /^POST \/users 201 \d+ms$/.test(message)));
@@ -344,8 +376,9 @@ export function registerContracts(candidates, selectedUnit) {
 
   register('07', 'Express 에러 처리', async () => {
     await withServer(candidates.errorHandling.createApp(), async (api) => {
-      const found = await api.get('/users/1').expect(200);
-      assert.equal(found.body.user.email, 'alice@example.com');
+      await api.get('/users/1').expect(200, {
+        user: { id: 1, name: 'Alice', email: 'alice@example.com' },
+      });
 
       await api
         .post('/users')
@@ -380,7 +413,10 @@ export function registerContracts(candidates, selectedUnit) {
         .post('/users')
         .send({ name: 'Alice 2', email: 'alice@example.com' })
         .expect(409, { success: false, message: 'Email already exists' });
-      const unexpected = await api.get('/users/boom').expect(500);
+      const unexpected = await api
+        .get('/users/boom')
+        .expect('Content-Type', /json/)
+        .expect(500);
       assert.deepEqual(unexpected.body, {
         success: false,
         message: 'Internal server error',
@@ -409,8 +445,11 @@ export function registerContracts(candidates, selectedUnit) {
     assert.match(errorSources[0], /this\.status\s*=\s*status/);
     assert.match(errorSources[0], /this\.name\s*=\s*this\.constructor\.name/);
     assert.match(errorSources[1], /super\(400,/);
+    assert.match(errorSources[1], /Bad request/);
     assert.match(errorSources[2], /super\(404,/);
+    assert.match(errorSources[2], /Not found/);
     assert.match(errorSources[3], /super\(409,/);
+    assert.match(errorSources[3], /Conflict/);
     assert.match(validateSource, /next\(new BadRequestException/);
     assert.match(routeSource, /next\(new NotFoundException/);
     assert.match(routeSource, /next\(new ConflictException/);
@@ -566,6 +605,7 @@ export function registerContracts(candidates, selectedUnit) {
         true,
       );
       assert.equal(candidates.mongodb.User.schema.options.timestamps, true);
+      assert.equal(candidates.mongodb.User.collection.collectionName, 'users');
 
       await withServer(candidates.mongodb.createApp(), async (api) => {
         const initial = await api.get('/users').expect(200);
@@ -606,18 +646,34 @@ export function registerContracts(candidates, selectedUnit) {
           .get(`/users/${created.body.user._id}`)
           .expect(200);
         assert.equal(persisted.body.user.email, 'carol@example.com');
+        const persistedDocument = await candidates.mongodb.User.findById(
+          created.body.user._id,
+        );
+        assert.ok(persistedDocument?._id instanceof mongoose.Types.ObjectId);
 
         await api
           .post('/users')
           .send({ name: 'Carol 2', email: 'carol@example.com' })
           .expect(409);
-        await api.get('/users/not-an-id').expect(400);
-        await api.get(`/users/${created.body.user._id}`).expect(200);
+        await api
+          .get('/users/not-an-id')
+          .expect(400, { message: 'Invalid user id' });
+        await api
+          .patch('/users/not-an-id')
+          .send({ name: 'Invalid' })
+          .expect(400, { message: 'Invalid user id' });
+        await api
+          .delete('/users/not-an-id')
+          .expect(400, { message: 'Invalid user id' });
+        await api.get(`/users/${created.body.user._id}`).expect(200, {
+          user: persisted.body.user,
+        });
         const updated = await api
           .patch(`/users/${created.body.user._id}`)
           .send({ name: 'Caroline' })
           .expect(200);
         assert.equal(updated.body.user.name, 'Caroline');
+        assert.equal(updated.body.user.email, 'carol@example.com');
         await api
           .patch(`/users/${created.body.user._id}`)
           .send({ email: '' })
@@ -629,8 +685,24 @@ export function registerContracts(candidates, selectedUnit) {
         await api
           .patch(`/users/${created.body.user._id}`)
           .expect(400, { message: 'Updates are required' });
-        await api.delete(`/users/${created.body.user._id}`).expect(200);
-        await api.get(`/users/${created.body.user._id}`).expect(404);
+        await api.delete(`/users/${created.body.user._id}`).expect(200, {
+          message: 'User deleted',
+          user: updated.body.user,
+        });
+        await api
+          .get(`/users/${created.body.user._id}`)
+          .expect(404, { message: 'User not found' });
+        const missingId = new mongoose.Types.ObjectId().toString();
+        await api
+          .get(`/users/${missingId}`)
+          .expect(404, { message: 'User not found' });
+        await api
+          .patch(`/users/${missingId}`)
+          .send({ name: 'Missing' })
+          .expect(404, { message: 'User not found' });
+        await api
+          .delete(`/users/${missingId}`)
+          .expect(404, { message: 'User not found' });
       });
 
       const originalFind = candidates.mongodb.User.find;

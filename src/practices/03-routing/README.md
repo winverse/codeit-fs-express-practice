@@ -14,6 +14,6 @@
 - `GET /users/1/posts/20` → 200 `{ "userId": "1", "postId": "20" }`
 - `POST /users`의 body `{ "name": "Alice", "email": "alice@example.com" }` → 201 `{ "user": body }`; 빈·누락 body → 400 `{ "message": "Name and email are required" }`; malformed JSON → 400 `{ "message": "Malformed JSON body" }`
 - `PUT /users/7`의 body `{ "name": "Alicia" }` → 200 `{ "userId": "7", "updates": body }`; 빈 body → 400 `{ "message": "Updates are required" }`
-- `DELETE /users/7` → 200 `{ "message": "User deleted", "userId": "7" }`; 알 수 없는 경로는 404
+- `DELETE /users/7` → 200 `{ "message": "User deleted", "userId": "7" }`; 알 수 없는 경로는 404 `{ "message": "Route not found" }`
 
 `npm run check:03`이 모든 method·path·입력·상태·Content-Type·본문과 확인 뒤 테스트 서버 종료를 검사합니다.

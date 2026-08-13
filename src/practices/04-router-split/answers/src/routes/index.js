@@ -9,3 +9,6 @@ rootRouter.get('/', (_req, res) => {
 });
 rootRouter.use('/users', usersRouter);
 rootRouter.use('/search', searchRouter);
+rootRouter.use((_req, res) => {
+  res.status(404).json({ message: 'Route not found' });
+});
