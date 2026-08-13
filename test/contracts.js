@@ -301,6 +301,11 @@ export function registerContracts(candidates, selectedUnit) {
         .set('Origin', 'http://localhost:3000')
         .expect('Access-Control-Allow-Origin', 'http://localhost:3000')
         .expect('Vary', /Origin/)
+        .expect(
+          'Access-Control-Allow-Methods',
+          'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+        )
+        .expect('Access-Control-Allow-Headers', 'Content-Type,Authorization')
         .expect(204);
       assert.deepEqual(trace.splice(0), ['cors']);
 
@@ -319,6 +324,13 @@ export function registerContracts(candidates, selectedUnit) {
     await withServer(candidates.errorHandling.createApp(), async (api) => {
       const found = await api.get('/users/1').expect(200);
       assert.equal(found.body.user.email, 'alice@example.com');
+
+      await api
+        .post('/users')
+        .send({ name: 'Bob', email: 'bob@example.com' })
+        .expect(201, {
+          user: { id: 2, name: 'Bob', email: 'bob@example.com' },
+        });
 
       await api.get('/users/999').expect(404, {
         success: false,

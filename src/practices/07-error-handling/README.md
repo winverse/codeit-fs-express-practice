@@ -7,6 +7,7 @@
 계약은 다음과 같습니다.
 
 - `GET /users/1` → 200과 fixture 사용자; `GET /users/999` → 404 `{ "success": false, "message": "User not found" }`
+- `POST /users`의 `{ "name": "Bob", "email": "bob@example.com" }` → 201 `{ "user": { "id": 2, "name": "Bob", "email": "bob@example.com" } }`
 - `POST /users`의 누락·빈 body → 400 `{ "success": false, "message": "Name and email are required" }`; malformed JSON → 400 `{ "success": false, "message": "Malformed JSON body" }`; 중복 email → 409 `{ "success": false, "message": "Email already exists" }`
 - `GET /users/boom`의 예상하지 못한 비동기 오류 → 500 `{ "success": false, "message": "Internal server error" }`이며 내부 message와 stack을 노출하지 않습니다.
 - 모든 오류는 `Content-Type: application/json`과 `{ "success": false, "message": "..." }` 형식을 사용하고 정상 요청도 유지합니다.
