@@ -49,12 +49,23 @@ export function registerContracts(candidates, selectedUnit) {
     assert.equal(packageJson.devDependencies.eslint, '^10.8.1');
     assert.equal(packageJson.devDependencies.prettier, '3.9.6');
     assert.equal(packageLock.lockfileVersion, 3);
+    assert.deepEqual(packageLock.packages[''].engines, {
+      node: '>=26 <27',
+      npm: '>=11',
+    });
     assert.equal(packageLock.packages[''].dependencies.express, '^5.2.1');
+    assert.equal(
+      packageLock.packages[''].devDependencies['@eslint/js'],
+      '^10.0.1',
+    );
     assert.equal(packageLock.packages[''].devDependencies.eslint, '^10.8.1');
     assert.equal(packageLock.packages[''].devDependencies.prettier, '3.9.6');
-    assert.match(packageJson.scripts.dev, /node --watch src\/server\.js/);
-    assert.match(packageJson.scripts.lint, /eslint/);
-    assert.match(packageJson.scripts['format:check'], /prettier --check/);
+    assert.equal(packageJson.scripts.dev, 'node --watch src/server.js');
+    assert.equal(packageJson.scripts.lint, 'eslint "src/**/*.js"');
+    assert.equal(
+      packageJson.scripts['format:check'],
+      'prettier --check . --ignore-unknown',
+    );
     assert.deepEqual(prettier, {
       printWidth: 80,
       bracketSpacing: true,
@@ -64,6 +75,10 @@ export function registerContracts(candidates, selectedUnit) {
     });
     assert.match(eslintSource, /@eslint\/js/);
     assert.match(eslintSource, /recommended/);
+    assert.match(eslintSource, /src\/\*\*\/\*\.js/);
+    assert.match(eslintSource, /ecmaVersion[\s\S]*latest/);
+    assert.match(eslintSource, /sourceType[\s\S]*module/);
+    assert.match(eslintSource, /console[\s\S]*readonly/);
 
     const stdout = execFileSync(
       process.execPath,
