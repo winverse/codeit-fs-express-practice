@@ -2,6 +2,13 @@
 
 1. `src/errors/`의 HTTP 오류 클래스를 완성합니다.
 2. `src/middlewares/`의 입력 검증과 중앙 에러 처리 미들웨어를 완성합니다.
-3. `src/routes/users.js`에서 오류를 전달하고 `src/app.js`의 마지막에 에러 처리 미들웨어를 연결합니다.
+3. `src/routes/users.js`에서 오류를 중앙 처리 흐름으로 전달합니다. 제공된 `src/app.js`에는 에러 처리 미들웨어가 이미 마지막에 연결되어 있으므로 순서를 확인하고 수정하지 않습니다.
 
-잘못된 입력은 400, 없는 사용자는 404, 중복 이메일은 409, 예상하지 못한 비동기 오류는 500으로 같은 `{ "success": false, "message": "..." }` 형식을 사용해야 합니다. 500 응답에는 stack을 노출하지 않습니다. `npm run check:07`이 정상·오류 경로와 마지막 에러 미들웨어를 확인합니다.
+계약은 다음과 같습니다.
+
+- `GET /users/1` → 200과 fixture 사용자; `GET /users/999` → 404 `{ "success": false, "message": "User not found" }`
+- `POST /users`의 누락·빈 body와 malformed JSON → JSON 400; 중복 email → 409
+- `GET /users/boom`의 예상하지 못한 비동기 오류 → 500 `{ "success": false, "message": "Internal server error" }`이며 내부 message와 stack을 노출하지 않습니다.
+- 모든 오류는 `Content-Type: application/json`과 `{ "success": false, "message": "..." }` 형식을 사용하고 정상 요청도 유지합니다.
+
+`npm run check:07`이 정상·400·404·409·500 응답, 마지막 4인자 에러 미들웨어와 서버 종료를 확인합니다.
