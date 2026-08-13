@@ -2,7 +2,7 @@
 
 1. 제공된 `src/db`는 격리 DB 연결·종료 함수를 포함합니다. 이 파일은 연결 생명주기를 확인할 때 참고하고 수정하지 않습니다. `src/models/user.js`에서 `name`은 required·trim, `email`은 required·trim·lowercase·unique로 정의하고 timestamps를 켭니다. `unique`는 validator가 아니라 MongoDB 고유 index 선언입니다.
 2. `src/routes/users.js`와 `src/app.js`의 CRUD·JSON 오류 응답을 완성합니다.
-3. `src/server.js`에서 index 준비 뒤 HTTP 서버를 열고 모든 시작 실패와 종료에서 HTTP 서버와 DB 연결을 정리합니다. 테스트가 매 실행마다 만든 격리 MongoDB에 연결하므로 개인 Atlas 주소나 비밀값을 입력하지 않습니다.
+3. `src/server.js`에서 `User`를 import하고, DB 연결 뒤 `await User.init()`으로 index를 준비한 다음 HTTP 서버를 엽니다. 모든 시작 실패와 종료에서는 HTTP 서버와 DB 연결을 정리합니다. 테스트가 매 실행마다 만든 격리 MongoDB에 연결하므로 개인 Atlas 주소나 비밀값을 입력하지 않습니다.
 
 계약은 다음과 같습니다.
 
