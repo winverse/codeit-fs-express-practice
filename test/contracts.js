@@ -395,8 +395,16 @@ export function registerContracts(candidates, selectedUnit) {
       packageJson.scripts.start,
       'node --env-file-if-exists=./env/.env.production src/server.js',
     );
+    assert.deepEqual(packageJson.engines, {
+      node: '>=26 <27',
+      npm: '>=11',
+    });
     assert.equal(packageJson.dependencies?.zod, '^4.4.3');
     assert.equal(packageLock.lockfileVersion, 3);
+    assert.deepEqual(packageLock.packages[''].engines, {
+      node: '>=26 <27',
+      npm: '>=11',
+    });
     assert.equal(packageLock.packages[''].dependencies.zod, '^4.4.3');
     assert.match(gitignore, /env\/\*/);
     assert.match(gitignore, /!env\/\.env\.example/);
