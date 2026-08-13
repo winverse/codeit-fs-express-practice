@@ -4,4 +4,11 @@
 2. `src/routes/index.js`에서 기능별 Router를 연결합니다.
 3. `src/app.js`에는 JSON 파서와 루트 Router 연결만 남깁니다. `GET /`, `GET /users/:userId`, `GET /search`의 응답은 분리 전 계약을 유지해야 합니다.
 
-`npm run check:04`가 정상 응답, 중복 query의 400과 Router 분리 구조를 함께 확인합니다.
+계약은 다음과 같습니다.
+
+- `GET /` → 200 `{ "message": "Hello Express!" }`
+- `GET /users/42` → 200 `{ "userId": "42" }`
+- `GET /search?q=router&limit=5` → 200 `{ "query": "router", "limit": 5 }`; 여러 번 전달된 `q` → 400 `{ "message": "Invalid query" }`
+- 알 수 없는 경로 → 404
+
+`npm run check:04`가 status·Content-Type·본문, Router 분리 구조와 확인 뒤 테스트 서버 종료를 함께 검사합니다.

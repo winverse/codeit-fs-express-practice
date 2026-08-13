@@ -445,6 +445,15 @@ export function registerContracts(candidates, selectedUnit) {
           .send({ name: 'Carol', email: 'carol@example.com' })
           .expect(201);
         assert.ok(mongoose.isValidObjectId(created.body.user._id));
+
+        await candidates.mongodb.disconnectDB();
+        assert.equal(mongoose.connection.readyState, 0);
+        await candidates.mongodb.connectDB(uri);
+        const persisted = await api
+          .get(`/users/${created.body.user._id}`)
+          .expect(200);
+        assert.equal(persisted.body.user.email, 'carol@example.com');
+
         await api
           .post('/users')
           .send({ name: 'Carol 2', email: 'carol@example.com' })

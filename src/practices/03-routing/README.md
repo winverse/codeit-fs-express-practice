@@ -10,7 +10,7 @@
 계약은 다음과 같습니다.
 
 - `GET /users/123` → 200 `{ "userId": "123" }`
-- `GET /search?q=express&limit=10` → 200 `{ "query": "express", "limit": 10 }`; 생략 시 `{ "query": "", "limit": 20 }`, 숫자가 아니거나 여러 번 전달된 값은 400
+- `GET /search?q=express&limit=10` → 200 `{ "query": "express", "limit": 10 }`; 생략 시 `{ "query": "", "limit": 20 }`; 숫자가 아니거나 여러 번 전달된 값 → 400 `{ "message": "Invalid query" }`
 - `GET /users/1/posts/20` → 200 `{ "userId": "1", "postId": "20" }`
 - `POST /users`의 body `{ "name": "Alice", "email": "alice@example.com" }` → 201 `{ "user": body }`; 빈·누락 body → 400 `{ "message": "Name and email are required" }`; malformed JSON → 400 `{ "message": "Malformed JSON body" }`
 - `PUT /users/7`의 body `{ "name": "Alicia" }` → 200 `{ "userId": "7", "updates": body }`; 빈 body → 400 `{ "message": "Updates are required" }`
