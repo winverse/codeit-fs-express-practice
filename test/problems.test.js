@@ -52,13 +52,37 @@ if (includes('05')) {
 if (includes('06')) {
   const { createApp } =
     await import('../src/practices/06-middleware/src/app.js');
-  candidates.middleware = { createApp };
+  const root = new URL(
+    '../src/practices/06-middleware/src/middlewares/',
+    import.meta.url,
+  );
+  candidates.middleware = {
+    createApp,
+    loggerSource: new URL('logger.js', root),
+    timerSource: new URL('requestTimer.js', root),
+  };
 }
 
 if (includes('07')) {
   const { createApp } =
     await import('../src/practices/07-error-handling/src/app.js');
-  candidates.errorHandling = { createApp };
+  const root = new URL(
+    '../src/practices/07-error-handling/src/',
+    import.meta.url,
+  );
+  candidates.errorHandling = {
+    createApp,
+    appSource: new URL('app.js', root),
+    errorSources: [
+      new URL('errors/httpException.js', root),
+      new URL('errors/badRequestException.js', root),
+      new URL('errors/notFoundException.js', root),
+      new URL('errors/conflictException.js', root),
+    ],
+    validateSource: new URL('middlewares/validateUser.js', root),
+    errorHandlerSource: new URL('middlewares/errorHandler.js', root),
+    routeSource: new URL('routes/users.js', root),
+  };
 }
 
 if (includes('08')) {

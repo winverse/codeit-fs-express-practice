@@ -60,8 +60,12 @@ export function registerContracts(candidates, selectedUnit) {
     );
     assert.equal(packageLock.packages[''].devDependencies.eslint, '^10.8.1');
     assert.equal(packageLock.packages[''].devDependencies.prettier, '3.9.6');
-    assert.equal(packageJson.scripts.dev, 'node --watch src/server.js');
+    assert.equal(packageJson.scripts.dev, 'node src/server.js');
     assert.equal(packageJson.scripts.lint, 'eslint "src/**/*.js"');
+    assert.equal(
+      packageJson.scripts.format,
+      'prettier --write . --ignore-unknown',
+    );
     assert.equal(
       packageJson.scripts['format:check'],
       'prettier --check . --ignore-unknown',
@@ -75,10 +79,16 @@ export function registerContracts(candidates, selectedUnit) {
     });
     assert.match(eslintSource, /@eslint\/js/);
     assert.match(eslintSource, /recommended/);
-    assert.match(eslintSource, /src\/\*\*\/\*\.js/);
-    assert.match(eslintSource, /ecmaVersion[\s\S]*latest/);
+    assert.match(eslintSource, /ecmaVersion[\s\S]*2024/);
     assert.match(eslintSource, /sourceType[\s\S]*module/);
     assert.match(eslintSource, /console[\s\S]*readonly/);
+    assert.match(eslintSource, /process[\s\S]*readonly/);
+    assert.match(eslintSource, /no-unused-vars[\s\S]*warn/);
+    assert.match(eslintSource, /no-console[\s\S]*off/);
+    assert.match(eslintSource, /prefer-const[\s\S]*error/);
+    assert.match(eslintSource, /no-var[\s\S]*error/);
+    assert.match(eslintSource, /semi[\s\S]*always/);
+    assert.match(eslintSource, /quotes[\s\S]*single/);
 
     const stdout = execFileSync(
       process.execPath,
@@ -316,8 +326,20 @@ export function registerContracts(candidates, selectedUnit) {
         .expect(403);
       assert.deepEqual(trace.splice(0), ['cors']);
     });
-    assert.ok(logs.some((message) => /POST \/users 201/.test(message)));
-    assert.ok(logs.some((message) => /completed in/.test(message)));
+    assert.ok(logs.some((message) => /^POST \/users 201 \d+ms$/.test(message)));
+    assert.ok(
+      logs.some((message) => /^completed in \d+\.\d{2}ms$/.test(message)),
+    );
+    const loggerSource = readFileSync(
+      candidates.middleware.loggerSource,
+      'utf8',
+    );
+    const timerSource = readFileSync(candidates.middleware.timerSource, 'utf8');
+    assert.match(loggerSource, /res\.on\(['"]finish['"]/);
+    assert.match(loggerSource, /Date\.now\(\)/);
+    assert.match(timerSource, /res\.on\(['"]finish['"]/);
+    assert.match(timerSource, /process\.hrtime\.bigint\(\)/);
+    assert.match(timerSource, /toFixed\(2\)/);
   });
 
   register('07', 'Express 에러 처리', async () => {
@@ -365,6 +387,38 @@ export function registerContracts(candidates, selectedUnit) {
       });
       assert.equal('stack' in unexpected.body, false);
     });
+
+    const appSource = readFileSync(candidates.errorHandling.appSource, 'utf8');
+    const errorSources = candidates.errorHandling.errorSources.map((url) =>
+      readFileSync(url, 'utf8'),
+    );
+    const validateSource = readFileSync(
+      candidates.errorHandling.validateSource,
+      'utf8',
+    );
+    const errorHandlerSource = readFileSync(
+      candidates.errorHandling.errorHandlerSource,
+      'utf8',
+    );
+    const routeSource = readFileSync(
+      candidates.errorHandling.routeSource,
+      'utf8',
+    );
+    assert.match(appSource, /app\.use\(errorHandler\)/);
+    assert.match(errorSources[0], /extends Error/);
+    assert.match(errorSources[0], /this\.status\s*=\s*status/);
+    assert.match(errorSources[0], /this\.name\s*=\s*this\.constructor\.name/);
+    assert.match(errorSources[1], /super\(400,/);
+    assert.match(errorSources[2], /super\(404,/);
+    assert.match(errorSources[3], /super\(409,/);
+    assert.match(validateSource, /next\(new BadRequestException/);
+    assert.match(routeSource, /next\(new NotFoundException/);
+    assert.match(routeSource, /next\(new ConflictException/);
+    assert.match(errorHandlerSource, /instanceof HttpException/);
+    assert.match(
+      errorHandlerSource,
+      /function errorHandler\s*\([^,]+,[^,]+,[^,]+,[^)]+\)/,
+    );
   });
 
   register('08', '환경 변수 구성', () => {
@@ -516,6 +570,10 @@ export function registerContracts(candidates, selectedUnit) {
       await withServer(candidates.mongodb.createApp(), async (api) => {
         const initial = await api.get('/users').expect(200);
         assert.equal(initial.body.users.length, 2);
+        assert.deepEqual(
+          initial.body.users.map(({ email }) => email),
+          ['alice@example.com', 'bob@example.com'],
+        );
 
         await api.post('/users').send({ name: 'Missing email' }).expect(400);
         await api.post('/users').expect(400);
@@ -560,6 +618,14 @@ export function registerContracts(candidates, selectedUnit) {
           .send({ name: 'Caroline' })
           .expect(200);
         assert.equal(updated.body.user.name, 'Caroline');
+        await api
+          .patch(`/users/${created.body.user._id}`)
+          .send({ email: '' })
+          .expect(400, { message: 'Name and email are required' });
+        await api
+          .patch(`/users/${created.body.user._id}`)
+          .send({ email: 'alice@example.com' })
+          .expect(409, { message: 'Email already exists' });
         await api
           .patch(`/users/${created.body.user._id}`)
           .expect(400, { message: 'Updates are required' });
@@ -651,6 +717,37 @@ export function registerContracts(candidates, selectedUnit) {
         'db:indexes-ready',
         'db:closed',
       ]);
+      assert.equal(mongoose.connection.readyState, 0);
+
+      const originalInit = candidates.mongodb.User.init;
+      const indexFailureEvents = [];
+      candidates.mongodb.User.init = async () => {
+        throw new Error('index preparation failed');
+      };
+      try {
+        await assert.rejects(
+          candidates.mongodb.startServer({
+            uri,
+            port: 0,
+            onEvent: (event) => indexFailureEvents.push(event),
+          }),
+          /index preparation failed/,
+        );
+      } finally {
+        candidates.mongodb.User.init = originalInit;
+      }
+      assert.deepEqual(indexFailureEvents, ['db:connected', 'db:closed']);
+      assert.equal(mongoose.connection.readyState, 0);
+
+      const connectionFailureEvents = [];
+      await assert.rejects(
+        candidates.mongodb.startServer({
+          uri: 'invalid://localhost',
+          port: 0,
+          onEvent: (event) => connectionFailureEvents.push(event),
+        }),
+      );
+      assert.deepEqual(connectionFailureEvents, ['db:closed']);
       assert.equal(mongoose.connection.readyState, 0);
     } finally {
       if (mongoose.connection.readyState !== 0) {

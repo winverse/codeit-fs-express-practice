@@ -11,6 +11,6 @@
 - 금지 Origin `https://evil.example` → body 형식과 관계없이 403 `{ "message": "Origin is not allowed" }`와 `Vary: Origin`, trace `cors`
 - Origin이 없으면 CORS 허용 헤더 없이 정상 처리하되 `Vary: Origin`을 응답합니다.
 - 허용 Origin의 `OPTIONS /users` → 204, `Access-Control-Allow-Origin: http://localhost:3000`, `Vary: Origin`, `Access-Control-Allow-Methods: GET,POST,PUT,PATCH,DELETE,OPTIONS`, `Access-Control-Allow-Headers: Content-Type,Authorization`, trace `cors`
-- 성공 응답이 끝난 뒤 logger와 timer는 `POST /users 201`, `completed in` 로그를 남깁니다.
+- 성공 응답의 `finish` 이벤트 뒤 logger는 `POST /users 201 <정수>ms`, timer는 `completed in <소수점 둘째 자리까지의 수>ms` 형식으로 실제 경과 시간을 남깁니다.
 
 `npm run check:06`이 status·Content-Type·header·body·로그·실행 순서와 서버 종료를 확인합니다.

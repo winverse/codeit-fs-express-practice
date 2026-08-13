@@ -4,6 +4,8 @@
 2. `src/middlewares/`의 입력 검증과 중앙 에러 처리 미들웨어를 완성합니다.
 3. `src/routes/users.js`에서 오류를 중앙 처리 흐름으로 전달합니다. 제공된 `src/app.js`에는 에러 처리 미들웨어가 이미 마지막에 연결되어 있으므로 순서를 확인하고 수정하지 않습니다.
 
+`HttpException`은 `Error`를 상속하고 `name`을 실제 하위 클래스 이름으로, `status`를 전달받은 상태 코드로 저장합니다. `BadRequestException`, `NotFoundException`, `ConflictException`은 이를 상속해 각각 400·404·409와 기본 message `Bad request`·`Not found`·`Conflict`를 전달합니다. 입력 검증과 route는 이 오류 인스턴스를 `next(error)`로 넘기고, 마지막 4인자 `errorHandler`가 예상 오류와 예상 밖 오류를 구분해 JSON으로 응답합니다.
+
 계약은 다음과 같습니다.
 
 - `GET /users/1` → 200과 fixture 사용자; `GET /users/999` → 404 `{ "success": false, "message": "User not found" }`

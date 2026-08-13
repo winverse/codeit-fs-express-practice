@@ -6,7 +6,7 @@
 
 - 각 app은 `fixtures/users.json`의 사용자 2명으로 시작하고 `GET /users`는 200 `{ "users": [...] }`를 응답합니다.
 - `POST /users`의 `{ "name": "Carol", "email": "carol@example.com" }`은 id 3의 사용자를 만들고 201 `{ "user": ... }`를 응답합니다. 빈·누락 body → 400 `{ "message": "Name and email are required" }`; malformed JSON → 400 `{ "message": "Malformed JSON body" }`입니다.
-- `GET /users/3`은 생성한 사용자를, `PATCH /users/3`의 `{ "name": "Caroline" }`은 수정한 사용자를 200으로 응답합니다. 빈 PATCH body → 400 `{ "message": "Updates are required" }`입니다.
+- `GET /users/3`은 200 `{ "user": ... }`로 생성한 사용자를, `PATCH /users/3`의 `{ "name": "Caroline" }`은 200 `{ "user": ... }`로 수정한 사용자를 응답합니다. 빈 PATCH body → 400 `{ "message": "Updates are required" }`입니다.
 - `DELETE /users/3`은 200 `{ "message": "User deleted", "user": ... }`로 삭제하고 이후 조회는 404입니다. 없는 사용자의 조회·수정·삭제 → 404 `{ "message": "User not found" }`입니다.
 - 요청 흐름이 끝난 뒤 fixture 사용자 수는 2명이고, 새 app을 만들면 id 1·2의 fixture 상태로 초기화됩니다.
 
