@@ -8,7 +8,7 @@
 
 - `GET /` → 200 `{ "message": "Hello Express!" }`
 - `GET /users/42` → 200 `{ "userId": "42" }`
-- `GET /search?q=router&limit=5` → 200 `{ "query": "router", "limit": 5 }`; 여러 번 전달된 `q` → 400 `{ "message": "Invalid query" }`
+- `GET /search?q=router&limit=5` → 200 `{ "query": "router", "limit": 5 }`; 생략 시 `{ "query": "", "limit": 20 }`; `limit`은 1 이상의 유한한 숫자여야 하며, 이 조건을 어기거나 `q`·`limit`을 여러 번 전달하면 400 `{ "message": "Invalid query" }`
 - 알 수 없는 경로 → 404
 
 `npm run check:04`가 status·Content-Type·본문, Router 분리 구조와 확인 뒤 테스트 서버 종료를 함께 검사합니다.

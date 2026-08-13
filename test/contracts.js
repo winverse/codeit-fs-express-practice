@@ -98,8 +98,17 @@ export function registerContracts(candidates, selectedUnit) {
         limit: 10,
       });
       await api.get('/search').expect(200, { query: '', limit: 20 });
-      await api.get('/search?limit=not-a-number').expect(400);
-      await api.get('/search?limit=1&limit=2').expect(400);
+      for (const query of [
+        'limit=not-a-number',
+        'limit=0',
+        'limit=-1',
+        'limit=1&limit=2',
+        'q=one&q=two',
+      ]) {
+        await api.get(`/search?${query}`).expect(400, {
+          message: 'Invalid query',
+        });
+      }
       await api
         .get('/users/1/posts/20')
         .expect(200, { userId: '1', postId: '20' });
@@ -144,7 +153,18 @@ export function registerContracts(candidates, selectedUnit) {
         query: 'router',
         limit: 5,
       });
-      await api.get('/search?q=router&q=duplicate').expect(400);
+      await api.get('/search').expect(200, { query: '', limit: 20 });
+      for (const query of [
+        'limit=not-a-number',
+        'limit=0',
+        'limit=-1',
+        'limit=1&limit=2',
+        'q=router&q=duplicate',
+      ]) {
+        await api.get(`/search?${query}`).expect(400, {
+          message: 'Invalid query',
+        });
+      }
       await api.get('/missing').expect(404);
     });
 
