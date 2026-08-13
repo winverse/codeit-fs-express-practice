@@ -368,6 +368,10 @@ export function registerContracts(candidates, selectedUnit) {
   });
 
   register('08', '환경 변수 구성', () => {
+    assert.deepEqual(candidates.envConfig.parseConfig({}), {
+      nodeEnv: 'development',
+      port: 5001,
+    });
     assert.deepEqual(
       candidates.envConfig.parseConfig({
         NODE_ENV: 'development',
