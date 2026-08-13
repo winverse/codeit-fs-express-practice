@@ -12,6 +12,6 @@
 - 빈·누락 body → 400 `{ "message": "Name and email are required" }`; malformed JSON → 400 `{ "message": "Malformed JSON body" }`; 빈 PATCH body → 400 `{ "message": "Updates are required" }`; 잘못된 ObjectId → 400 `{ "message": "Invalid user id" }`
 - 없는 문서 → 404 `{ "message": "User not found" }`; 생성·수정의 빈 필수 값과 Mongoose validation 오류 → 400 `{ "message": "Name and email are required" }`; 생성·수정의 중복 email과 고유 index 오류 → 409 `{ "message": "Email already exists" }`
 - 생성 문서는 재연결 후에도 유지되고 수정·삭제 전후 문서 수와 값이 맞아야 합니다. 예상 밖 DB 오류 → 500 `{ "message": "Internal server error" }`이며 내부 message·stack을 노출하지 않습니다.
-- `startServer()`는 DB 연결→index 준비→HTTP listen 순서로 시작하며, 정상 실행·종료 시 `onEvent`에 `['db:connected', 'db:indexes-ready', 'http:listening', 'http:closed', 'db:closed']`를 차례로 전달합니다. 점유 포트·범위 밖 포트·index 준비 실패를 포함한 모든 시작 실패에서도 연결한 DB를 닫은 뒤 `db:closed`를 전달하고, 열린 server handle을 남기지 않습니다.
+- `startServer()`는 DB 연결→index 준비→HTTP listen 순서로 시작하며, 정상 실행·종료 시 `onEvent`에 `['db:connected', 'db:indexes-ready', 'http:listening', 'http:closed', 'db:closed']`를 차례로 전달합니다. 점유 포트·범위 밖 포트·index 준비 실패를 포함한 모든 시작 실패에서 DB 연결을 정리하고 `db:closed`를 전달합니다. DB 연결 자체가 실패해 실제 연결이 만들어지지 않은 경우에도 `disconnectDB()`를 호출하고 `db:closed`를 전달해야 하며, 열린 server handle을 남기지 않습니다.
 
 `npm run check:09`가 schema validation·고유 index·fixture/reset·CRUD 전후 데이터·오류 응답·재연결·시작 실패·정상 종료를 확인합니다.
