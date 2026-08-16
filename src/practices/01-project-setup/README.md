@@ -1,6 +1,6 @@
 # Express 프로젝트 기본 설정
 
-`workspace/`는 설치 전의 독립 프로젝트 뼈대입니다. `workspace/package.json`, `workspace/package-lock.json`, `workspace/eslint.config.js`, `workspace/.prettierrc`, `workspace/src/server.js`를 수정하세요. `package.json`의 `"type": "module"`은 이미 제공되므로 유지합니다.
+`workspace/`는 설치 전의 독립 프로젝트 뼈대입니다. `workspace/package.json`, `workspace/eslint.config.js`, `workspace/.prettierrc`, `workspace/src/server.js`를 수정하세요. `workspace/package-lock.json`은 아래 설치 명령의 결과로 갱신합니다. `package.json`의 `"type": "module"`은 이미 제공되므로 유지합니다.
 
 1. `workspace/package.json`에 `engines.node`를 `>=26 <27`, `engines.npm`을 `>=11`로 먼저 설정합니다. `dev`는 `node src/server.js`, `lint`는 `eslint "src/**/*.js"`, `format`은 `prettier --write . --ignore-unknown`, `format:check`는 `prettier --check . --ignore-unknown`으로 선언합니다.
 2. `cd src/practices/01-project-setup/workspace`에서 `npm install express@5.2.1`, `npm install -D eslint@10.8.1 @eslint/js@10.0.1`, `npm install -D --save-exact prettier@3.9.6`을 차례로 실행해 package와 lockfile을 함께 갱신합니다.
