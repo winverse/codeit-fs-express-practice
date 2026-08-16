@@ -5,9 +5,9 @@
 ## 시작하기
 
 ```bash
-git clone https://github.com/winverse/codeit-fs-javascript-backend-express-practice.git
-cd codeit-fs-javascript-backend-express-practice
-npm ci
+git clone https://github.com/winverse/codeit-fs-express-practice.git
+cd codeit-fs-express-practice
+npm install
 ```
 
 Node.js 26과 npm 11을 사용합니다. 원하는 실습의 안내를 읽고 문제 파일을 수정한 다음 해당 확인 명령을 실행하세요.
