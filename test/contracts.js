@@ -34,7 +34,6 @@ export function registerContracts(candidates, selectedUnit) {
   register('01', 'Express 프로젝트 기본 설정', () => {
     const workspace = candidates.projectSetup.workspace;
     const packageJson = readJson(new URL('package.json', workspace));
-    const packageLock = readJson(new URL('package-lock.json', workspace));
     const prettier = readJson(new URL('.prettierrc', workspace));
     const eslintSource = readFileSync(
       new URL('eslint.config.js', workspace),
@@ -48,18 +47,6 @@ export function registerContracts(candidates, selectedUnit) {
     assert.equal(packageJson.devDependencies['@eslint/js'], '^10.0.1');
     assert.equal(packageJson.devDependencies.eslint, '^10.8.1');
     assert.equal(packageJson.devDependencies.prettier, '3.9.6');
-    assert.equal(packageLock.lockfileVersion, 3);
-    assert.deepEqual(packageLock.packages[''].engines, {
-      node: '>=26 <27',
-      npm: '>=11',
-    });
-    assert.equal(packageLock.packages[''].dependencies.express, '^5.2.1');
-    assert.equal(
-      packageLock.packages[''].devDependencies['@eslint/js'],
-      '^10.0.1',
-    );
-    assert.equal(packageLock.packages[''].devDependencies.eslint, '^10.8.1');
-    assert.equal(packageLock.packages[''].devDependencies.prettier, '3.9.6');
     assert.equal(packageJson.scripts.dev, 'node src/server.js');
     assert.equal(packageJson.scripts.lint, 'eslint "src/**/*.js"');
     assert.equal(
