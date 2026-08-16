@@ -1,8 +1,8 @@
 # Express 미들웨어
 
-1. `src/middlewares/`의 CORS, logger, request timer와 사용자 입력 검증 미들웨어를 완성합니다.
+1. `src/middlewares/`의 `TODO`를 따라 CORS, logger, request timer와 사용자 입력 검증 미들웨어를 완성합니다.
 2. 제공된 `src/routes/users.js`는 입력 검증 미들웨어가 이미 연결되어 있습니다. 이 파일은 route와 trace 진입점을 확인할 때 참고하고 수정하지 않습니다.
-3. `src/app.js`에서 CORS를 JSON parser보다 앞에 두고 CORS→logger→timer→route 순서로 연결합니다.
+3. `src/server.js`에서 CORS를 JSON parser보다 앞에 두고 CORS→logger→timer→route 순서로 연결합니다.
 
 계약은 다음과 같습니다.
 

@@ -1,26 +1,28 @@
 import { readFileSync } from 'node:fs';
 import { registerContracts } from './contracts.js';
-import { createApp as createServerStartApp } from '../src/practices/02-server-start/answers/src/app.js';
-import { createApp as createRoutingApp } from '../src/practices/03-routing/answers/src/app.js';
-import { createApp as createRouterSplitApp } from '../src/practices/04-router-split/answers/src/app.js';
-import { createApp as createMemoryCrudApp } from '../src/practices/05-memory-crud/answers/src/app.js';
-import { createApp as createMiddlewareApp } from '../src/practices/06-middleware/answers/src/app.js';
+import { createApp as createServerStartApp } from '../src/practices/02-server-start/answers/src/server.js';
+import { createApp as createRoutingApp } from '../src/practices/03-routing/answers/src/server.js';
+import { createApp as createRouterSplitApp } from '../src/practices/04-router-split/answers/src/server.js';
+import { createApp as createMemoryCrudApp } from '../src/practices/05-memory-crud/answers/src/server.js';
+import { createApp as createMiddlewareApp } from '../src/practices/06-middleware/answers/src/server.js';
 import { createLogger } from '../src/practices/06-middleware/answers/src/middlewares/logger.js';
 import { createRequestTimer } from '../src/practices/06-middleware/answers/src/middlewares/requestTimer.js';
-import { createApp as createErrorHandlingApp } from '../src/practices/07-error-handling/answers/src/app.js';
+import { createApp as createErrorHandlingApp } from '../src/practices/07-error-handling/answers/src/server.js';
 import { BadRequestException } from '../src/practices/07-error-handling/answers/src/errors/badRequestException.js';
 import { ConflictException } from '../src/practices/07-error-handling/answers/src/errors/conflictException.js';
 import { HttpException } from '../src/practices/07-error-handling/answers/src/errors/httpException.js';
 import { NotFoundException } from '../src/practices/07-error-handling/answers/src/errors/notFoundException.js';
 import { errorHandler } from '../src/practices/07-error-handling/answers/src/middlewares/errorHandler.js';
 import { parseConfig } from '../src/practices/08-env-config/answers/workspace/src/config/config.js';
-import { createApp as createMongoApp } from '../src/practices/09-mongodb/answers/src/app.js';
 import {
   connectDB,
   disconnectDB,
 } from '../src/practices/09-mongodb/answers/src/db/index.js';
 import { User } from '../src/practices/09-mongodb/answers/src/models/user.js';
-import { startServer } from '../src/practices/09-mongodb/answers/src/server.js';
+import {
+  createApp as createMongoApp,
+  startServer,
+} from '../src/practices/09-mongodb/answers/src/server.js';
 
 const routerSplitRoot = new URL(
   '../src/practices/04-router-split/answers/src/',
@@ -45,7 +47,7 @@ registerContracts({
   routing: { createApp: createRoutingApp },
   routerSplit: {
     createApp: createRouterSplitApp,
-    appSource: new URL('app.js', routerSplitRoot),
+    serverSource: new URL('server.js', routerSplitRoot),
     routeSources: [
       new URL('routes/index.js', routerSplitRoot),
       new URL('routes/users.js', routerSplitRoot),

@@ -7,6 +7,7 @@ import { createUsersRouter } from './routes/users.js';
 export function createApp(options = {}) {
   const app = express();
 
+  // TODO: CORS → JSON parser → logger → timer → route 순서로 연결하세요.
   app.use(express.json());
   app.use(createCors(options));
   app.use(createLogger(options));

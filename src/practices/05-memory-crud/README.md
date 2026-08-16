@@ -1,6 +1,6 @@
 # 메모리 데이터 CRUD
 
-`fixtures/users.json`을 매 실행마다 새 배열로 복사하는 `src/routes/users.js`를 완성하세요. 목록·상세·생성·수정·삭제가 한 요청 흐름에서 상태를 올바르게 바꾸고, 새 앱을 만들면 fixture 상태로 초기화되어야 합니다.
+`fixtures/users.json`을 매 실행마다 새 배열로 복사하는 `src/routes/users.js`의 `TODO`를 완성하세요. Express 앱 조립은 `src/server.js`에 이미 준비되어 있습니다. 목록·상세·생성·수정·삭제가 한 요청 흐름에서 상태를 올바르게 바꾸고, 새 앱을 만들면 fixture 상태로 초기화되어야 합니다.
 
 계약은 다음과 같습니다.
 

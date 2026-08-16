@@ -16,25 +16,26 @@ if (includes('01')) {
 
 if (includes('02')) {
   const { createApp } =
-    await import('../src/practices/02-server-start/src/app.js');
+    await import('../src/practices/02-server-start/src/server.js');
   candidates.serverStart = { createApp };
 }
 
 if (includes('03')) {
-  const { createApp } = await import('../src/practices/03-routing/src/app.js');
+  const { createApp } =
+    await import('../src/practices/03-routing/src/server.js');
   candidates.routing = { createApp };
 }
 
 if (includes('04')) {
   const { createApp } =
-    await import('../src/practices/04-router-split/src/app.js');
+    await import('../src/practices/04-router-split/src/server.js');
   const root = new URL(
     '../src/practices/04-router-split/src/',
     import.meta.url,
   );
   candidates.routerSplit = {
     createApp,
-    appSource: new URL('app.js', root),
+    serverSource: new URL('server.js', root),
     routeSources: [
       new URL('routes/index.js', root),
       new URL('routes/users.js', root),
@@ -45,14 +46,14 @@ if (includes('04')) {
 
 if (includes('05')) {
   const { createApp } =
-    await import('../src/practices/05-memory-crud/src/app.js');
+    await import('../src/practices/05-memory-crud/src/server.js');
   candidates.memoryCrud = { createApp };
 }
 
 if (includes('06')) {
   const [{ createApp }, { createLogger }, { createRequestTimer }] =
     await Promise.all([
-      import('../src/practices/06-middleware/src/app.js'),
+      import('../src/practices/06-middleware/src/server.js'),
       import('../src/practices/06-middleware/src/middlewares/logger.js'),
       import('../src/practices/06-middleware/src/middlewares/requestTimer.js'),
     ]);
@@ -68,7 +69,7 @@ if (includes('07')) {
     { ConflictException },
     { errorHandler },
   ] = await Promise.all([
-    import('../src/practices/07-error-handling/src/app.js'),
+    import('../src/practices/07-error-handling/src/server.js'),
     import('../src/practices/07-error-handling/src/errors/httpException.js'),
     import('../src/practices/07-error-handling/src/errors/badRequestException.js'),
     import('../src/practices/07-error-handling/src/errors/notFoundException.js'),
@@ -104,11 +105,10 @@ if (includes('08')) {
 }
 
 if (includes('09')) {
-  const [{ createApp }, database, model, lifecycle] = await Promise.all([
-    import('../src/practices/09-mongodb/src/app.js'),
+  const [lifecycle, database, model] = await Promise.all([
+    import('../src/practices/09-mongodb/src/server.js'),
     import('../src/practices/09-mongodb/src/db/index.js'),
     import('../src/practices/09-mongodb/src/models/user.js'),
-    import('../src/practices/09-mongodb/src/server.js'),
   ]);
   const fixture = JSON.parse(
     readFileSync(
@@ -120,7 +120,7 @@ if (includes('09')) {
     ),
   );
   candidates.mongodb = {
-    createApp,
+    createApp: lifecycle.createApp,
     connectDB: database.connectDB,
     disconnectDB: database.disconnectDB,
     User: model.User,

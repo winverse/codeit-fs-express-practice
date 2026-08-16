@@ -1,6 +1,6 @@
 # Express 라우팅
 
-`src/app.js`에서 params, query, JSON body를 사용하는 라우트를 완성하세요.
+`src/server.js`의 `TODO`를 따라 params, query, JSON body를 사용하는 라우트를 완성하세요.
 
 - `GET /users/:userId`
 - `GET /search?q=express&limit=10` (`limit` 기본값 20, 숫자로 응답)

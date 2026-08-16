@@ -205,15 +205,18 @@ export function registerContracts(candidates, selectedUnit) {
         .expect(404, { message: 'Route not found' });
     });
 
-    const appSource = readFileSync(candidates.routerSplit.appSource, 'utf8');
+    const serverSource = readFileSync(
+      candidates.routerSplit.serverSource,
+      'utf8',
+    );
     const routeSources = candidates.routerSplit.routeSources.map((url) =>
       readFileSync(url, 'utf8'),
     );
     assert.doesNotMatch(
-      appSource,
+      serverSource,
       /app\.(?:get|post|put|patch|delete|route|all)\s*\(/,
     );
-    assert.match(appSource, /app\.use\s*\(/);
+    assert.match(serverSource, /app\.use\s*\(/);
     assert.ok(routeSources.every((source) => /Router/.test(source)));
     assert.ok(routeSources.some((source) => /\.get\s*\(/.test(source)));
   });
