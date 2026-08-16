@@ -10,7 +10,7 @@
 - 누락·빈 body → 400 `{ "message": "Name and email are required" }`, trace `cors→logger→timer`; 허용 Origin의 malformed JSON → CORS·Vary가 있는 400 `{ "message": "Malformed JSON body" }`, trace `cors`
 - 금지 Origin `https://evil.example` → body 형식과 관계없이 403 `{ "message": "Origin is not allowed" }`와 `Vary: Origin`, trace `cors`
 - Origin이 없으면 CORS 허용 헤더 없이 정상 처리하되 `Vary: Origin`을 응답합니다.
-- 허용 Origin의 `OPTIONS /users` → 204, `Access-Control-Allow-Origin: http://localhost:3000`, `Vary: Origin`, `Access-Control-Allow-Methods: GET,POST,PUT,PATCH,DELETE,OPTIONS`, `Access-Control-Allow-Headers: Content-Type,Authorization`, trace `cors`
-- logger와 timer는 `next()` 전에 `Date.now()`로 시작 시각을 저장하고, 성공 응답의 `finish` 이벤트에서 다시 구한 시각과의 차이로 실제 경과 시간을 계산합니다. logger는 `POST /users 201 <정수>ms`, timer는 `completed in <정수>ms` 형식으로 기록합니다.
+- 허용 Origin의 `OPTIONS /users` → 204, `Access-Control-Allow-Origin: http://localhost:3000`, `Vary: Origin`, 필수 method·header를 포함한 CORS 헤더, trace `cors`. CORS 헤더 안의 값 순서는 의미에 영향을 주지 않습니다.
+- logger와 timer는 성공 응답이 끝날 때 실제 경과 시간을 계산합니다. logger는 `POST /users 201 <정수>ms`, timer는 `completed in <정수>ms` 형식으로 기록합니다.
 
 `npm run check:06`이 status·Content-Type·header·body·로그·실행 순서와 서버 종료를 확인합니다.

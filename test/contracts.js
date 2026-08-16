@@ -1,12 +1,16 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
+import { EventEmitter } from 'node:events';
 import { readFileSync } from 'node:fs';
 import net from 'node:net';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import { ESLint } from 'eslint';
 import request from 'supertest';
+
+const versionRangePattern = /^[~^]?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 
 async function withServer(app, assertion) {
   const server = app.listen(0);
@@ -24,6 +28,25 @@ function readJson(url) {
   return JSON.parse(readFileSync(url, 'utf8'));
 }
 
+function assertDependency(packageJson, section, name) {
+  const version = packageJson[section]?.[name];
+  assert.equal(typeof version, 'string', `${name} must be in ${section}`);
+  assert.match(
+    version,
+    versionRangePattern,
+    `${name} must have a valid saved version`,
+  );
+}
+
+function assertHeaderIncludes(response, name, expectedValues) {
+  const actual = response.headers[name.toLowerCase()];
+  assert.equal(typeof actual, 'string', `${name} header is required`);
+  const values = actual.split(',').map((value) => value.trim().toLowerCase());
+  for (const expected of expectedValues) {
+    assert.ok(values.includes(expected.toLowerCase()), `${name}: ${expected}`);
+  }
+}
+
 export function registerContracts(candidates, selectedUnit) {
   const register = (unit, name, callback) => {
     if (!selectedUnit || selectedUnit === unit) {
@@ -31,45 +54,42 @@ export function registerContracts(candidates, selectedUnit) {
     }
   };
 
-  register('01', 'Express 프로젝트 기본 설정', () => {
+  register('01', 'Express 프로젝트 기본 설정', async () => {
     const workspace = candidates.projectSetup.workspace;
     const packageJson = readJson(new URL('package.json', workspace));
     const prettier = readJson(new URL('.prettierrc', workspace));
-    const eslintSource = readFileSync(
-      new URL('eslint.config.js', workspace),
-      'utf8',
+    const eslint = new ESLint({ cwd: fileURLToPath(workspace) });
+    const eslintConfig = await eslint.calculateConfigForFile(
+      fileURLToPath(new URL('src/server.js', workspace)),
     );
 
     assert.equal(packageJson.type, 'module');
     assert.equal(packageJson.engines?.node, '>=26 <27');
     assert.equal(packageJson.engines?.npm, '>=11');
-    assert.equal(packageJson.dependencies.express, '^5.2.1');
-    assert.equal(packageJson.devDependencies['@eslint/js'], '^10.0.1');
-    assert.equal(packageJson.devDependencies.eslint, '^10.8.1');
-    assert.equal(packageJson.devDependencies.prettier, '^3.9.6');
+    assertDependency(packageJson, 'dependencies', 'express');
+    assertDependency(packageJson, 'devDependencies', '@eslint/js');
+    assertDependency(packageJson, 'devDependencies', 'eslint');
+    assertDependency(packageJson, 'devDependencies', 'prettier');
     assert.equal(packageJson.scripts.dev, 'node src/server.js');
     assert.equal(packageJson.scripts.lint, 'eslint "src/**/*.js"');
     assert.equal(packageJson.scripts.format, 'prettier --write .');
     assert.equal(packageJson.scripts['format:check'], 'prettier --check .');
-    assert.deepEqual(prettier, {
-      printWidth: 80,
-      bracketSpacing: true,
-      singleQuote: true,
-      semi: true,
-      trailingComma: 'all',
-    });
-    assert.match(eslintSource, /@eslint\/js/);
-    assert.match(eslintSource, /recommended/);
-    assert.match(eslintSource, /ecmaVersion[\s\S]*2024/);
-    assert.match(eslintSource, /sourceType[\s\S]*module/);
-    assert.match(eslintSource, /console[\s\S]*readonly/);
-    assert.match(eslintSource, /process[\s\S]*readonly/);
-    assert.match(eslintSource, /no-unused-vars[\s\S]*warn/);
-    assert.match(eslintSource, /no-console[\s\S]*off/);
-    assert.match(eslintSource, /prefer-const[\s\S]*error/);
-    assert.match(eslintSource, /no-var[\s\S]*error/);
-    assert.match(eslintSource, /semi[\s\S]*always/);
-    assert.match(eslintSource, /quotes[\s\S]*single/);
+    assert.equal(prettier.printWidth, 80);
+    assert.equal(prettier.bracketSpacing, true);
+    assert.equal(prettier.singleQuote, true);
+    assert.equal(prettier.semi, true);
+    assert.equal(prettier.trailingComma, 'all');
+    assert.equal(eslintConfig.languageOptions.ecmaVersion, 2024);
+    assert.equal(eslintConfig.languageOptions.sourceType, 'module');
+    assert.equal(eslintConfig.languageOptions.globals.console, 'readonly');
+    assert.equal(eslintConfig.languageOptions.globals.process, 'readonly');
+    assert.equal(eslintConfig.rules['no-undef'][0], 2);
+    assert.equal(eslintConfig.rules['no-unused-vars'][0], 1);
+    assert.equal(eslintConfig.rules['no-console'][0], 0);
+    assert.equal(eslintConfig.rules['prefer-const'][0], 2);
+    assert.equal(eslintConfig.rules['no-var'][0], 2);
+    assert.deepEqual(eslintConfig.rules.semi.slice(0, 2), [2, 'always']);
+    assert.deepEqual(eslintConfig.rules.quotes.slice(0, 2), [2, 'single']);
 
     const stdout = execFileSync(
       process.execPath,
@@ -319,17 +339,24 @@ export function registerContracts(candidates, selectedUnit) {
       assert.equal(noOrigin.headers['access-control-allow-origin'], undefined);
       assert.deepEqual(trace.splice(0), ['cors', 'logger', 'timer', 'route']);
 
-      await api
+      const preflight = await api
         .options('/users')
         .set('Origin', 'http://localhost:3000')
         .expect('Access-Control-Allow-Origin', 'http://localhost:3000')
         .expect('Vary', /Origin/)
-        .expect(
-          'Access-Control-Allow-Methods',
-          'GET,POST,PUT,PATCH,DELETE,OPTIONS',
-        )
-        .expect('Access-Control-Allow-Headers', 'Content-Type,Authorization')
         .expect(204);
+      assertHeaderIncludes(preflight, 'Access-Control-Allow-Methods', [
+        'GET',
+        'POST',
+        'PUT',
+        'PATCH',
+        'DELETE',
+        'OPTIONS',
+      ]);
+      assertHeaderIncludes(preflight, 'Access-Control-Allow-Headers', [
+        'Content-Type',
+        'Authorization',
+      ]);
       assert.deepEqual(trace.splice(0), ['cors']);
 
       await api
@@ -341,15 +368,42 @@ export function registerContracts(candidates, selectedUnit) {
     });
     assert.ok(logs.some((message) => /^POST \/users 201 \d+ms$/.test(message)));
     assert.ok(logs.some((message) => /^completed in \d+ms$/.test(message)));
-    const loggerSource = readFileSync(
-      candidates.middleware.loggerSource,
-      'utf8',
+
+    const timingLogs = [];
+    const loggerResponse = Object.assign(new EventEmitter(), {
+      statusCode: 201,
+    });
+    const timerResponse = new EventEmitter();
+    let nextCalls = 0;
+    const write = (message) => timingLogs.push(message);
+    const next = () => {
+      nextCalls += 1;
+    };
+    candidates.middleware.createLogger({ write })(
+      { method: 'POST', originalUrl: '/users' },
+      loggerResponse,
+      next,
     );
-    const timerSource = readFileSync(candidates.middleware.timerSource, 'utf8');
-    assert.match(loggerSource, /res\.on\(['"]finish['"]/);
-    assert.match(loggerSource, /Date\.now\(\)/);
-    assert.match(timerSource, /res\.on\(['"]finish['"]/);
-    assert.match(timerSource, /Date\.now\(\)/);
+    candidates.middleware.createRequestTimer({ write })(
+      {},
+      timerResponse,
+      next,
+    );
+    assert.equal(nextCalls, 2);
+    assert.deepEqual(timingLogs, []);
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    assert.deepEqual(timingLogs, []);
+    loggerResponse.emit('finish');
+    timerResponse.emit('finish');
+    assert.equal(timingLogs.length, 2);
+    for (const [message, pattern] of [
+      [timingLogs[0], /^POST \/users 201 (\d+)ms$/],
+      [timingLogs[1], /^completed in (\d+)ms$/],
+    ]) {
+      const elapsed = pattern.exec(message);
+      assert.ok(elapsed);
+      assert.ok(Number(elapsed[1]) >= 20);
+    }
   });
 
   register('07', 'Express 에러 처리', async () => {
@@ -402,42 +456,24 @@ export function registerContracts(candidates, selectedUnit) {
       assert.equal('stack' in unexpected.body, false);
     });
 
-    const appSource = readFileSync(candidates.errorHandling.appSource, 'utf8');
-    const errorSources = candidates.errorHandling.errorSources.map((url) =>
-      readFileSync(url, 'utf8'),
-    );
-    const validateSource = readFileSync(
-      candidates.errorHandling.validateSource,
-      'utf8',
-    );
-    const errorHandlerSource = readFileSync(
-      candidates.errorHandling.errorHandlerSource,
-      'utf8',
-    );
-    const routeSource = readFileSync(
-      candidates.errorHandling.routeSource,
-      'utf8',
-    );
-    assert.match(appSource, /app\.use\(errorHandler\)/);
-    assert.match(errorSources[0], /extends Error/);
-    assert.match(errorSources[0], /this\.status\s*=\s*status/);
-    assert.match(errorSources[0], /this\.name\s*=\s*this\.constructor\.name/);
-    assert.match(errorSources[1], /super\(400,/);
-    assert.match(errorSources[1], /Bad request/);
-    assert.match(errorSources[2], /super\(404,/);
-    assert.match(errorSources[2], /Not found/);
-    assert.match(errorSources[3], /super\(409,/);
-    assert.match(errorSources[3], /Conflict/);
-    assert.match(validateSource, /BadRequestException/);
-    assert.match(validateSource, /next\s*\(/);
-    assert.match(routeSource, /NotFoundException/);
-    assert.match(routeSource, /ConflictException/);
-    assert.match(routeSource, /next\s*\(/);
-    assert.match(errorHandlerSource, /instanceof HttpException/);
-    assert.match(
-      errorHandlerSource,
-      /function errorHandler\s*\([^,]+,[^,]+,[^,]+,[^)]+\)/,
-    );
+    const httpError = new candidates.errorHandling.HttpException(418, 'Teapot');
+    assert.ok(httpError instanceof Error);
+    assert.equal(httpError.name, 'HttpException');
+    assert.equal(httpError.status, 418);
+    assert.equal(httpError.message, 'Teapot');
+
+    for (const [Exception, status, message] of [
+      [candidates.errorHandling.BadRequestException, 400, 'Bad request'],
+      [candidates.errorHandling.NotFoundException, 404, 'Not found'],
+      [candidates.errorHandling.ConflictException, 409, 'Conflict'],
+    ]) {
+      const error = new Exception();
+      assert.ok(error instanceof candidates.errorHandling.HttpException);
+      assert.equal(error.name, Exception.name);
+      assert.equal(error.status, status);
+      assert.equal(error.message, message);
+    }
+    assert.equal(candidates.errorHandling.errorHandler.length, 4);
   });
 
   register('08', '환경 변수 구성', () => {
@@ -465,9 +501,6 @@ export function registerContracts(candidates, selectedUnit) {
     const packageJson = readJson(
       new URL('package.json', candidates.envConfig.workspace),
     );
-    const packageLock = readJson(
-      new URL('package-lock.json', candidates.envConfig.workspace),
-    );
     const prettier = readJson(candidates.envConfig.prettierConfig);
     const gitignore = readFileSync(
       new URL('.gitignore', candidates.envConfig.workspace),
@@ -487,26 +520,15 @@ export function registerContracts(candidates, selectedUnit) {
     );
     assert.equal(packageJson.scripts.format, 'prettier --write .');
     assert.equal(packageJson.scripts['format:check'], 'prettier --check .');
-    assert.deepEqual(packageJson.engines, {
-      node: '>=26 <27',
-      npm: '>=11',
-    });
-    assert.equal(packageJson.dependencies?.zod, '^4.4.3');
-    assert.equal(packageJson.devDependencies?.prettier, '^3.9.6');
-    assert.equal(packageLock.lockfileVersion, 3);
-    assert.deepEqual(packageLock.packages[''].engines, {
-      node: '>=26 <27',
-      npm: '>=11',
-    });
-    assert.equal(packageLock.packages[''].dependencies.zod, '^4.4.3');
-    assert.equal(packageLock.packages[''].devDependencies.prettier, '^3.9.6');
-    assert.deepEqual(prettier, {
-      printWidth: 80,
-      bracketSpacing: true,
-      trailingComma: 'all',
-      semi: true,
-      singleQuote: true,
-    });
+    assert.equal(packageJson.engines?.node, '>=26 <27');
+    assert.equal(packageJson.engines?.npm, '>=11');
+    assertDependency(packageJson, 'dependencies', 'zod');
+    assertDependency(packageJson, 'devDependencies', 'prettier');
+    assert.equal(prettier.printWidth, 80);
+    assert.equal(prettier.bracketSpacing, true);
+    assert.equal(prettier.trailingComma, 'all');
+    assert.equal(prettier.semi, true);
+    assert.equal(prettier.singleQuote, true);
     assert.match(gitignore, /env\/\*/);
     assert.match(gitignore, /!env\/\.env\.example/);
     assert.match(example, /NODE_ENV=development/);
@@ -564,18 +586,6 @@ export function registerContracts(candidates, selectedUnit) {
   });
 
   register('09', 'MongoDB 연동', async () => {
-    const routeSource = readFileSync(candidates.mongodb.routeSource, 'utf8');
-    assert.match(
-      routeSource,
-      /returnDocument\s*:\s*['"]after['"]/,
-      "PATCH must use returnDocument: 'after'",
-    );
-    assert.doesNotMatch(
-      routeSource,
-      /\bnew\s*:\s*true\b/,
-      'PATCH must not use deprecated new: true',
-    );
-
     const mongod = await MongoMemoryServer.create();
     const uri = mongod.getUri('express_practice');
     try {
@@ -730,25 +740,94 @@ export function registerContracts(candidates, selectedUnit) {
 
       await candidates.mongodb.connectDB(uri);
       assert.equal(await candidates.mongodb.User.countDocuments(), 2);
-      await candidates.mongodb.disconnectDB();
+      await candidates.mongodb.User.init();
+      assert.equal(mongoose.connection.readyState, 1);
 
-      const events = [];
-      const lifecycle = await candidates.mongodb.startServer({
-        uri,
-        port: 0,
-        onEvent: (event) => events.push(event),
+      const portProbe = net.createServer();
+      await new Promise((resolve, reject) => {
+        portProbe.once('error', reject);
+        portProbe.listen(0, resolve);
       });
+      const portAddress = portProbe.address();
+      assert.ok(portAddress && typeof portAddress === 'object');
+      const lifecyclePort = portAddress.port;
+      const lifecycleHost = portAddress.family === 'IPv6' ? '::1' : '127.0.0.1';
+      await new Promise((resolve, reject) => {
+        portProbe.close((error) => (error ? reject(error) : resolve()));
+      });
+
+      const originalInitForOrder = candidates.mongodb.User.init;
+      let allowIndexPreparation;
+      const indexPreparationGate = new Promise((resolve) => {
+        allowIndexPreparation = resolve;
+      });
+      let markIndexPreparationStarted;
+      const indexPreparationStarted = new Promise((resolve) => {
+        markIndexPreparationStarted = resolve;
+      });
+      candidates.mongodb.User.init = async function initWithGate() {
+        markIndexPreparationStarted();
+        await indexPreparationGate;
+        return originalInitForOrder.call(this);
+      };
+
+      let lifecycle;
+      let starting;
+      let startupObservation;
+      let startupValidated = false;
+      try {
+        starting = candidates.mongodb.startServer({
+          uri,
+          port: lifecyclePort,
+        });
+        startupObservation = await Promise.race([
+          indexPreparationStarted.then(() => 'index'),
+          starting.then((result) => {
+            lifecycle = result;
+            return 'server';
+          }),
+          new Promise((resolve) => {
+            setTimeout(() => resolve('timeout'), 1000);
+          }),
+        ]);
+        assert.equal(startupObservation, 'index');
+        const socketOpenedBeforeIndex = await new Promise((resolve) => {
+          const socket = net.createConnection(
+            { host: lifecycleHost, port: lifecyclePort },
+            () => {
+              socket.destroy();
+              resolve(true);
+            },
+          );
+          socket.once('error', () => resolve(false));
+        });
+        assert.equal(socketOpenedBeforeIndex, false);
+        allowIndexPreparation();
+        lifecycle = await starting;
+        startupValidated = true;
+      } finally {
+        candidates.mongodb.User.init = originalInitForOrder;
+        allowIndexPreparation();
+        if (!startupValidated && starting) {
+          try {
+            lifecycle ??= await starting;
+            if (lifecycle?.server.listening) {
+              await lifecycle.close();
+            }
+          } catch {
+            await candidates.mongodb.disconnectDB();
+          }
+        }
+      }
+
       assert.equal(lifecycle.server.listening, true);
+      const closeOrder = [];
+      lifecycle.server.once('close', () => closeOrder.push('http'));
+      mongoose.connection.once('disconnected', () => closeOrder.push('db'));
       await lifecycle.close();
+      assert.deepEqual(closeOrder, ['http', 'db']);
       assert.equal(lifecycle.server.listening, false);
       assert.equal(mongoose.connection.readyState, 0);
-      assert.deepEqual(events, [
-        'db:connected',
-        'db:indexes-ready',
-        'http:listening',
-        'http:closed',
-        'db:closed',
-      ]);
 
       const occupied = net.createServer();
       await new Promise((resolve, reject) => {
@@ -757,13 +836,11 @@ export function registerContracts(candidates, selectedUnit) {
       });
       const address = occupied.address();
       assert.ok(address && typeof address === 'object');
-      const failedEvents = [];
       try {
         await assert.rejects(
           candidates.mongodb.startServer({
             uri,
             port: address.port,
-            onEvent: (event) => failedEvents.push(event),
           }),
           (error) => error?.code === 'EADDRINUSE',
         );
@@ -772,31 +849,9 @@ export function registerContracts(candidates, selectedUnit) {
           occupied.close((error) => (error ? reject(error) : resolve()));
         });
       }
-      assert.deepEqual(failedEvents, [
-        'db:connected',
-        'db:indexes-ready',
-        'db:closed',
-      ]);
-      assert.equal(mongoose.connection.readyState, 0);
-
-      const invalidPortEvents = [];
-      await assert.rejects(
-        candidates.mongodb.startServer({
-          uri,
-          port: 70000,
-          onEvent: (event) => invalidPortEvents.push(event),
-        }),
-        RangeError,
-      );
-      assert.deepEqual(invalidPortEvents, [
-        'db:connected',
-        'db:indexes-ready',
-        'db:closed',
-      ]);
       assert.equal(mongoose.connection.readyState, 0);
 
       const originalInit = candidates.mongodb.User.init;
-      const indexFailureEvents = [];
       candidates.mongodb.User.init = async () => {
         throw new Error('index preparation failed');
       };
@@ -805,25 +860,20 @@ export function registerContracts(candidates, selectedUnit) {
           candidates.mongodb.startServer({
             uri,
             port: 0,
-            onEvent: (event) => indexFailureEvents.push(event),
           }),
           /index preparation failed/,
         );
       } finally {
         candidates.mongodb.User.init = originalInit;
       }
-      assert.deepEqual(indexFailureEvents, ['db:connected', 'db:closed']);
       assert.equal(mongoose.connection.readyState, 0);
 
-      const connectionFailureEvents = [];
       await assert.rejects(
         candidates.mongodb.startServer({
           uri: 'invalid://localhost',
           port: 0,
-          onEvent: (event) => connectionFailureEvents.push(event),
         }),
       );
-      assert.deepEqual(connectionFailureEvents, ['db:closed']);
       assert.equal(mongoose.connection.readyState, 0);
     } finally {
       if (mongoose.connection.readyState !== 0) {

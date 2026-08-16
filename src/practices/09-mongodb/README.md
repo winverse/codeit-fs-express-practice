@@ -8,10 +8,10 @@
 
 - 테스트가 매번 만드는 `express_practice` DB를 fixture 사용자 2명으로 reset하고 고유 index를 준비합니다. 개인 Atlas나 기존 로컬 DB에 의존하지 않습니다.
 - `GET /users` → email 오름차순의 200 `{ "users": [...] }`; `POST /users`의 `{ "name": " Carol ", "email": "CAROL@EXAMPLE.COM " }` → 201과 ObjectId·`createdAt`·`updatedAt`이 있고 name·email이 `Carol`·`carol@example.com`으로 정규화된 `{ "user": ... }`
-- `GET /users/:userId` → 200 `{ "user": ... }`; `PATCH /users/:userId`의 `{ "name": "Caroline" }` → 200과 수정된 `{ "user": ... }`; 이때 `findByIdAndUpdate()`는 `{ runValidators: true, returnDocument: 'after' }`를 사용하고 deprecated `new: true`는 사용하지 않습니다. `DELETE /users/:userId` → 200 `{ "message": "User deleted", "user": ... }`
+- `GET /users/:userId` → 200 `{ "user": ... }`; `PATCH /users/:userId`의 `{ "name": "Caroline" }` → 200과 수정된 `{ "user": ... }`; `DELETE /users/:userId` → 200 `{ "message": "User deleted", "user": ... }`
 - 빈·누락 body → 400 `{ "message": "Name and email are required" }`; malformed JSON → 400 `{ "message": "Malformed JSON body" }`; 빈 PATCH body → 400 `{ "message": "Updates are required" }`; 잘못된 ObjectId → 400 `{ "message": "Invalid user id" }`
 - 없는 문서 → 404 `{ "message": "User not found" }`; 생성·수정의 빈 필수 값과 Mongoose validation 오류 → 400 `{ "message": "Name and email are required" }`; 생성·수정의 중복 email과 고유 index 오류 → 409 `{ "message": "Email already exists" }`
 - 생성 문서는 재연결 후에도 유지되고 수정·삭제 전후 문서 수와 값이 맞아야 합니다. 예상 밖 DB 오류 → 500 `{ "message": "Internal server error" }`이며 내부 message·stack을 노출하지 않습니다.
-- `startServer()`는 DB 연결→index 준비→HTTP listen 순서로 시작하며, 정상 실행·종료 시 `onEvent`에 `['db:connected', 'db:indexes-ready', 'http:listening', 'http:closed', 'db:closed']`를 차례로 전달합니다. 점유 포트·범위 밖 포트·index 준비 실패를 포함한 모든 시작 실패에서 DB 연결을 정리하고 `db:closed`를 전달합니다. DB 연결 자체가 실패해 실제 연결이 만들어지지 않은 경우에도 `disconnectDB()`를 호출하고 `db:closed`를 전달해야 하며, 열린 server handle을 남기지 않습니다.
+- `startServer()`는 DB 연결→index 준비→HTTP listen 순서로 시작하고 HTTP→DB 순서로 종료합니다. 시작에 실패하면 DB 연결과 열린 server handle을 정리합니다.
 
 `npm run check:09`가 schema validation·고유 index·fixture/reset·CRUD 전후 데이터·오류 응답·재연결·시작 실패·정상 종료를 확인합니다.

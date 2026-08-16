@@ -2,14 +2,12 @@ import { createApp } from './app.js';
 import { connectDB, disconnectDB } from './db/index.js';
 import { User } from './models/user.js';
 
-export async function startServer({ uri, port = 0, onEvent = () => {} }) {
+export async function startServer({ uri, port = 0 }) {
   let server;
 
   try {
     await connectDB(uri);
-    onEvent('db:connected');
     await User.init();
-    onEvent('db:indexes-ready');
     server = createApp().listen(port);
     await new Promise((resolve, reject) => {
       const handleListening = () => {
@@ -24,15 +22,9 @@ export async function startServer({ uri, port = 0, onEvent = () => {} }) {
       server.once('error', handleError);
     });
   } catch (error) {
-    try {
-      await disconnectDB();
-    } finally {
-      onEvent('db:closed');
-    }
+    await disconnectDB();
     throw error;
   }
-
-  onEvent('http:listening');
 
   return {
     server,
@@ -42,14 +34,9 @@ export async function startServer({ uri, port = 0, onEvent = () => {} }) {
           await new Promise((resolve, reject) => {
             server.close((error) => (error ? reject(error) : resolve()));
           });
-          onEvent('http:closed');
         }
       } finally {
-        try {
-          await disconnectDB();
-        } finally {
-          onEvent('db:closed');
-        }
+        await disconnectDB();
       }
     },
   };

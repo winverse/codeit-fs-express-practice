@@ -50,38 +50,38 @@ if (includes('05')) {
 }
 
 if (includes('06')) {
-  const { createApp } =
-    await import('../src/practices/06-middleware/src/app.js');
-  const root = new URL(
-    '../src/practices/06-middleware/src/middlewares/',
-    import.meta.url,
-  );
-  candidates.middleware = {
-    createApp,
-    loggerSource: new URL('logger.js', root),
-    timerSource: new URL('requestTimer.js', root),
-  };
+  const [{ createApp }, { createLogger }, { createRequestTimer }] =
+    await Promise.all([
+      import('../src/practices/06-middleware/src/app.js'),
+      import('../src/practices/06-middleware/src/middlewares/logger.js'),
+      import('../src/practices/06-middleware/src/middlewares/requestTimer.js'),
+    ]);
+  candidates.middleware = { createApp, createLogger, createRequestTimer };
 }
 
 if (includes('07')) {
-  const { createApp } =
-    await import('../src/practices/07-error-handling/src/app.js');
-  const root = new URL(
-    '../src/practices/07-error-handling/src/',
-    import.meta.url,
-  );
+  const [
+    { createApp },
+    { HttpException },
+    { BadRequestException },
+    { NotFoundException },
+    { ConflictException },
+    { errorHandler },
+  ] = await Promise.all([
+    import('../src/practices/07-error-handling/src/app.js'),
+    import('../src/practices/07-error-handling/src/errors/httpException.js'),
+    import('../src/practices/07-error-handling/src/errors/badRequestException.js'),
+    import('../src/practices/07-error-handling/src/errors/notFoundException.js'),
+    import('../src/practices/07-error-handling/src/errors/conflictException.js'),
+    import('../src/practices/07-error-handling/src/middlewares/errorHandler.js'),
+  ]);
   candidates.errorHandling = {
     createApp,
-    appSource: new URL('app.js', root),
-    errorSources: [
-      new URL('errors/httpException.js', root),
-      new URL('errors/badRequestException.js', root),
-      new URL('errors/notFoundException.js', root),
-      new URL('errors/conflictException.js', root),
-    ],
-    validateSource: new URL('middlewares/validateUser.js', root),
-    errorHandlerSource: new URL('middlewares/errorHandler.js', root),
-    routeSource: new URL('routes/users.js', root),
+    HttpException,
+    BadRequestException,
+    NotFoundException,
+    ConflictException,
+    errorHandler,
   };
 }
 
@@ -124,10 +124,6 @@ if (includes('09')) {
     disconnectDB: database.disconnectDB,
     User: model.User,
     startServer: lifecycle.startServer,
-    routeSource: new URL(
-      '../src/practices/09-mongodb/src/routes/users.js',
-      import.meta.url,
-    ),
     fixture,
   };
 }

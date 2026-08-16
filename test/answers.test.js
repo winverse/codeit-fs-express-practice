@@ -5,7 +5,14 @@ import { createApp as createRoutingApp } from '../src/practices/03-routing/answe
 import { createApp as createRouterSplitApp } from '../src/practices/04-router-split/answers/src/app.js';
 import { createApp as createMemoryCrudApp } from '../src/practices/05-memory-crud/answers/src/app.js';
 import { createApp as createMiddlewareApp } from '../src/practices/06-middleware/answers/src/app.js';
+import { createLogger } from '../src/practices/06-middleware/answers/src/middlewares/logger.js';
+import { createRequestTimer } from '../src/practices/06-middleware/answers/src/middlewares/requestTimer.js';
 import { createApp as createErrorHandlingApp } from '../src/practices/07-error-handling/answers/src/app.js';
+import { BadRequestException } from '../src/practices/07-error-handling/answers/src/errors/badRequestException.js';
+import { ConflictException } from '../src/practices/07-error-handling/answers/src/errors/conflictException.js';
+import { HttpException } from '../src/practices/07-error-handling/answers/src/errors/httpException.js';
+import { NotFoundException } from '../src/practices/07-error-handling/answers/src/errors/notFoundException.js';
+import { errorHandler } from '../src/practices/07-error-handling/answers/src/middlewares/errorHandler.js';
 import { parseConfig } from '../src/practices/08-env-config/answers/workspace/src/config/config.js';
 import { createApp as createMongoApp } from '../src/practices/09-mongodb/answers/src/app.js';
 import {
@@ -48,51 +55,16 @@ registerContracts({
   memoryCrud: { createApp: createMemoryCrudApp },
   middleware: {
     createApp: createMiddlewareApp,
-    loggerSource: new URL(
-      '../src/practices/06-middleware/answers/src/middlewares/logger.js',
-      import.meta.url,
-    ),
-    timerSource: new URL(
-      '../src/practices/06-middleware/answers/src/middlewares/requestTimer.js',
-      import.meta.url,
-    ),
+    createLogger,
+    createRequestTimer,
   },
   errorHandling: {
     createApp: createErrorHandlingApp,
-    appSource: new URL(
-      '../src/practices/07-error-handling/answers/src/app.js',
-      import.meta.url,
-    ),
-    errorSources: [
-      new URL(
-        '../src/practices/07-error-handling/answers/src/errors/httpException.js',
-        import.meta.url,
-      ),
-      new URL(
-        '../src/practices/07-error-handling/answers/src/errors/badRequestException.js',
-        import.meta.url,
-      ),
-      new URL(
-        '../src/practices/07-error-handling/answers/src/errors/notFoundException.js',
-        import.meta.url,
-      ),
-      new URL(
-        '../src/practices/07-error-handling/answers/src/errors/conflictException.js',
-        import.meta.url,
-      ),
-    ],
-    validateSource: new URL(
-      '../src/practices/07-error-handling/answers/src/middlewares/validateUser.js',
-      import.meta.url,
-    ),
-    errorHandlerSource: new URL(
-      '../src/practices/07-error-handling/answers/src/middlewares/errorHandler.js',
-      import.meta.url,
-    ),
-    routeSource: new URL(
-      '../src/practices/07-error-handling/answers/src/routes/users.js',
-      import.meta.url,
-    ),
+    HttpException,
+    BadRequestException,
+    NotFoundException,
+    ConflictException,
+    errorHandler,
   },
   envConfig: {
     parseConfig,
@@ -114,10 +86,6 @@ registerContracts({
     disconnectDB,
     User,
     startServer,
-    routeSource: new URL(
-      '../src/practices/09-mongodb/answers/src/routes/users.js',
-      import.meta.url,
-    ),
     fixture: mongoFixture,
   },
 });
