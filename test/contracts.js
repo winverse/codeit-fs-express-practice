@@ -46,7 +46,7 @@ export function registerContracts(candidates, selectedUnit) {
     assert.equal(packageJson.dependencies.express, '^5.2.1');
     assert.equal(packageJson.devDependencies['@eslint/js'], '^10.0.1');
     assert.equal(packageJson.devDependencies.eslint, '^10.8.1');
-    assert.equal(packageJson.devDependencies.prettier, '3.9.6');
+    assert.equal(packageJson.devDependencies.prettier, '^3.9.6');
     assert.equal(packageJson.scripts.dev, 'node src/server.js');
     assert.equal(packageJson.scripts.lint, 'eslint "src/**/*.js"');
     assert.equal(packageJson.scripts.format, 'prettier --write .');
@@ -492,14 +492,14 @@ export function registerContracts(candidates, selectedUnit) {
       npm: '>=11',
     });
     assert.equal(packageJson.dependencies?.zod, '^4.4.3');
-    assert.equal(packageJson.devDependencies?.prettier, '3.9.6');
+    assert.equal(packageJson.devDependencies?.prettier, '^3.9.6');
     assert.equal(packageLock.lockfileVersion, 3);
     assert.deepEqual(packageLock.packages[''].engines, {
       node: '>=26 <27',
       npm: '>=11',
     });
     assert.equal(packageLock.packages[''].dependencies.zod, '^4.4.3');
-    assert.equal(packageLock.packages[''].devDependencies.prettier, '3.9.6');
+    assert.equal(packageLock.packages[''].devDependencies.prettier, '^3.9.6');
     assert.deepEqual(prettier, {
       printWidth: 80,
       bracketSpacing: true,
