@@ -456,21 +456,21 @@ export function registerContracts(candidates, selectedUnit) {
       assert.equal('stack' in unexpected.body, false);
     });
 
-    const httpError = new candidates.errorHandling.HttpException(418, 'Teapot');
+    const httpError = new candidates.errorHandling.HttpException('Teapot', 418);
     assert.ok(httpError instanceof Error);
     assert.equal(httpError.name, 'HttpException');
-    assert.equal(httpError.status, 418);
+    assert.equal(httpError.statusCode, 418);
     assert.equal(httpError.message, 'Teapot');
 
     for (const [Exception, status, message] of [
-      [candidates.errorHandling.BadRequestException, 400, 'Bad request'],
-      [candidates.errorHandling.NotFoundException, 404, 'Not found'],
-      [candidates.errorHandling.ConflictException, 409, 'Conflict'],
+      [candidates.errorHandling.BadRequestException, 400, 'BAD_REQUEST'],
+      [candidates.errorHandling.NotFoundException, 404, 'NOT_FOUND'],
+      [candidates.errorHandling.ConflictException, 409, 'CONFLICT'],
     ]) {
       const error = new Exception();
       assert.ok(error instanceof candidates.errorHandling.HttpException);
       assert.equal(error.name, Exception.name);
-      assert.equal(error.status, status);
+      assert.equal(error.statusCode, status);
       assert.equal(error.message, message);
     }
     assert.equal(candidates.errorHandling.errorHandler.length, 4);
