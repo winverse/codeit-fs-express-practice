@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "format": "prettier --write . --ignore-unknown",
-    "format:check": "prettier --check . --ignore-unknown"
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "prettier": "3.9.6"

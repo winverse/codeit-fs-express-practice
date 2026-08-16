@@ -49,14 +49,8 @@ export function registerContracts(candidates, selectedUnit) {
     assert.equal(packageJson.devDependencies.prettier, '3.9.6');
     assert.equal(packageJson.scripts.dev, 'node src/server.js');
     assert.equal(packageJson.scripts.lint, 'eslint "src/**/*.js"');
-    assert.equal(
-      packageJson.scripts.format,
-      'prettier --write . --ignore-unknown',
-    );
-    assert.equal(
-      packageJson.scripts['format:check'],
-      'prettier --check . --ignore-unknown',
-    );
+    assert.equal(packageJson.scripts.format, 'prettier --write .');
+    assert.equal(packageJson.scripts['format:check'], 'prettier --check .');
     assert.deepEqual(prettier, {
       printWidth: 80,
       bracketSpacing: true,
@@ -491,14 +485,8 @@ export function registerContracts(candidates, selectedUnit) {
       packageJson.scripts.start,
       'node --env-file-if-exists=./env/.env.production src/server.js',
     );
-    assert.equal(
-      packageJson.scripts.format,
-      'prettier --write . --ignore-unknown',
-    );
-    assert.equal(
-      packageJson.scripts['format:check'],
-      'prettier --check . --ignore-unknown',
-    );
+    assert.equal(packageJson.scripts.format, 'prettier --write .');
+    assert.equal(packageJson.scripts['format:check'], 'prettier --check .');
     assert.deepEqual(packageJson.engines, {
       node: '>=26 <27',
       npm: '>=11',
