@@ -77,6 +77,7 @@ registerContracts({
     validFixture: new URL('fixtures/env/valid.env', envRoot),
     invalidFixtures: [
       new URL('fixtures/env/invalid-node-env.env', envRoot),
+      new URL('fixtures/env/invalid-low-port.env', envRoot),
       new URL('fixtures/env/invalid-port.env', envRoot),
     ],
   },

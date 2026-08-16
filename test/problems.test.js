@@ -97,6 +97,7 @@ if (includes('08')) {
     validFixture: new URL('fixtures/env/valid.env', root),
     invalidFixtures: [
       new URL('fixtures/env/invalid-node-env.env', root),
+      new URL('fixtures/env/invalid-low-port.env', root),
       new URL('fixtures/env/invalid-port.env', root),
     ],
   };

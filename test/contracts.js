@@ -488,8 +488,18 @@ export function registerContracts(candidates, selectedUnit) {
       }),
       { nodeEnv: 'development', port: 5001 },
     );
+    assert.deepEqual(
+      candidates.envConfig.parseConfig({ NODE_ENV: 'test', PORT: '1000' }),
+      { nodeEnv: 'test', port: 1000 },
+    );
     assert.throws(() =>
       candidates.envConfig.parseConfig({ NODE_ENV: 'preview', PORT: '5001' }),
+    );
+    assert.throws(() =>
+      candidates.envConfig.parseConfig({
+        NODE_ENV: 'development',
+        PORT: '999',
+      }),
     );
     assert.throws(() =>
       candidates.envConfig.parseConfig({
@@ -512,11 +522,11 @@ export function registerContracts(candidates, selectedUnit) {
     );
     assert.equal(
       packageJson.scripts.dev,
-      'node --watch --env-file-if-exists=./env/.env.development src/server.js',
+      'node --watch --env-file=./env/.env.development src/server.js',
     );
     assert.equal(
       packageJson.scripts.start,
-      'node --env-file-if-exists=./env/.env.production src/server.js',
+      'node --env-file=./env/.env.production src/server.js',
     );
     assert.equal(packageJson.scripts.format, 'prettier --write .');
     assert.equal(packageJson.scripts['format:check'], 'prettier --check .');
@@ -539,7 +549,10 @@ export function registerContracts(candidates, selectedUnit) {
     delete inheritedEnv.PORT;
     const workspaceStart = spawnSync(
       process.execPath,
-      ['--env-file-if-exists=./env/.env.production', 'src/server.js'],
+      [
+        `--env-file=${candidates.envConfig.validFixture.pathname}`,
+        'src/server.js',
+      ],
       {
         cwd: fileURLToPath(candidates.envConfig.workspace),
         encoding: 'utf8',

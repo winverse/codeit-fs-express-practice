@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --watch --env-file-if-exists=./env/.env.development src/server.js",
-    "start": "node --env-file-if-exists=./env/.env.production src/server.js",
+    "dev": "node --watch --env-file=./env/.env.development src/server.js",
+    "start": "node --env-file=./env/.env.production src/server.js",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
