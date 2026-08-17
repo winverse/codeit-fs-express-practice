@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { validateUser } from '../middlewares/validateUser.js';
+import { validateUser } from '../middlewares/validate-user.js';
 
 export function createUsersRouter() {
   const router = Router();

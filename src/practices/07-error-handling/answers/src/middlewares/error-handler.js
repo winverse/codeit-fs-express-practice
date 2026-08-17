@@ -1,4 +1,4 @@
-import { HttpException } from '../errors/httpException.js';
+import { HttpException } from '../errors/http-exception.js';
 
 export function errorHandler(error, _req, res, _next) {
   if (error instanceof SyntaxError && error.status === 400) {

@@ -1,5 +1,5 @@
 import express from 'express';
-import { errorHandler } from './middlewares/errorHandler.js';
+import { errorHandler } from './middlewares/error-handler.js';
 import { createUsersRouter } from './routes/users.js';
 
 export function createApp() {

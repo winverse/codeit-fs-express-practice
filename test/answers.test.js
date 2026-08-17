@@ -7,11 +7,11 @@ import { createApp as createMemoryCrudApp } from '../src/practices/05-memory-cru
 import { createApp as createMiddlewareApp } from '../src/practices/06-middleware/answers/src/server.js';
 import { createLogger } from '../src/practices/06-middleware/answers/src/middlewares/logger.js';
 import { createApp as createErrorHandlingApp } from '../src/practices/07-error-handling/answers/src/server.js';
-import { BadRequestException } from '../src/practices/07-error-handling/answers/src/errors/badRequestException.js';
-import { ConflictException } from '../src/practices/07-error-handling/answers/src/errors/conflictException.js';
-import { HttpException } from '../src/practices/07-error-handling/answers/src/errors/httpException.js';
-import { NotFoundException } from '../src/practices/07-error-handling/answers/src/errors/notFoundException.js';
-import { errorHandler } from '../src/practices/07-error-handling/answers/src/middlewares/errorHandler.js';
+import { BadRequestException } from '../src/practices/07-error-handling/answers/src/errors/bad-request-exception.js';
+import { ConflictException } from '../src/practices/07-error-handling/answers/src/errors/conflict-exception.js';
+import { HttpException } from '../src/practices/07-error-handling/answers/src/errors/http-exception.js';
+import { NotFoundException } from '../src/practices/07-error-handling/answers/src/errors/not-found-exception.js';
+import { errorHandler } from '../src/practices/07-error-handling/answers/src/middlewares/error-handler.js';
 import { parseConfig } from '../src/practices/08-env-config/answers/workspace/src/config/config.js';
 import { connectDB } from '../src/practices/09-mongodb/answers/src/db/index.js';
 import { User } from '../src/practices/09-mongodb/answers/src/models/user.js';

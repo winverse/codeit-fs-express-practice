@@ -68,11 +68,11 @@ if (includes('07')) {
     { errorHandler },
   ] = await Promise.all([
     import('../src/practices/07-error-handling/src/server.js'),
-    import('../src/practices/07-error-handling/src/errors/httpException.js'),
-    import('../src/practices/07-error-handling/src/errors/badRequestException.js'),
-    import('../src/practices/07-error-handling/src/errors/notFoundException.js'),
-    import('../src/practices/07-error-handling/src/errors/conflictException.js'),
-    import('../src/practices/07-error-handling/src/middlewares/errorHandler.js'),
+    import('../src/practices/07-error-handling/src/errors/http-exception.js'),
+    import('../src/practices/07-error-handling/src/errors/bad-request-exception.js'),
+    import('../src/practices/07-error-handling/src/errors/not-found-exception.js'),
+    import('../src/practices/07-error-handling/src/errors/conflict-exception.js'),
+    import('../src/practices/07-error-handling/src/middlewares/error-handler.js'),
   ]);
   candidates.errorHandling = {
     createApp,

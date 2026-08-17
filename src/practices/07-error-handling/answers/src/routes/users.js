@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { ConflictException } from '../errors/conflictException.js';
-import { NotFoundException } from '../errors/notFoundException.js';
-import { validateUser } from '../middlewares/validateUser.js';
+import { ConflictException } from '../errors/conflict-exception.js';
+import { NotFoundException } from '../errors/not-found-exception.js';
+import { validateUser } from '../middlewares/validate-user.js';
 
 export function createUsersRouter() {
   const router = Router();
