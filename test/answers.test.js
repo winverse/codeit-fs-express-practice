@@ -6,7 +6,6 @@ import { createApp as createRouterSplitApp } from '../src/practices/04-router-sp
 import { createApp as createMemoryCrudApp } from '../src/practices/05-memory-crud/answers/src/server.js';
 import { createApp as createMiddlewareApp } from '../src/practices/06-middleware/answers/src/server.js';
 import { createLogger } from '../src/practices/06-middleware/answers/src/middlewares/logger.js';
-import { createRequestTimer } from '../src/practices/06-middleware/answers/src/middlewares/requestTimer.js';
 import { createApp as createErrorHandlingApp } from '../src/practices/07-error-handling/answers/src/server.js';
 import { BadRequestException } from '../src/practices/07-error-handling/answers/src/errors/badRequestException.js';
 import { ConflictException } from '../src/practices/07-error-handling/answers/src/errors/conflictException.js';
@@ -58,7 +57,6 @@ registerContracts({
   middleware: {
     createApp: createMiddlewareApp,
     createLogger,
-    createRequestTimer,
   },
   errorHandling: {
     createApp: createErrorHandlingApp,

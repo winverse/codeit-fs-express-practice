@@ -303,16 +303,16 @@ export function registerContracts(candidates, selectedUnit) {
         .expect('Vary', /Origin/)
         .expect(201);
       assert.equal(success.body.user.email, 'alice@example.com');
-      assert.deepEqual(trace.splice(0), ['cors', 'logger', 'timer', 'route']);
+      assert.deepEqual(trace.splice(0), ['cors', 'logger', 'route']);
 
       await api
         .post('/users')
         .send({ name: 'Missing email' })
         .expect(400, { message: 'Name and email are required' });
-      assert.deepEqual(trace.splice(0), ['cors', 'logger', 'timer']);
+      assert.deepEqual(trace.splice(0), ['cors', 'logger']);
 
       await api.post('/users').expect(400);
-      assert.deepEqual(trace.splice(0), ['cors', 'logger', 'timer']);
+      assert.deepEqual(trace.splice(0), ['cors', 'logger']);
 
       await api
         .post('/users')
@@ -340,7 +340,7 @@ export function registerContracts(candidates, selectedUnit) {
         .expect('Vary', /Origin/)
         .expect(201);
       assert.equal(noOrigin.headers['access-control-allow-origin'], undefined);
-      assert.deepEqual(trace.splice(0), ['cors', 'logger', 'timer', 'route']);
+      assert.deepEqual(trace.splice(0), ['cors', 'logger', 'route']);
 
       const preflight = await api
         .options('/users')
@@ -370,13 +370,11 @@ export function registerContracts(candidates, selectedUnit) {
       assert.deepEqual(trace.splice(0), ['cors']);
     });
     assert.ok(logs.some((message) => /^POST \/users 201 \d+ms$/.test(message)));
-    assert.ok(logs.some((message) => /^completed in \d+ms$/.test(message)));
 
     const timingLogs = [];
     const loggerResponse = Object.assign(new EventEmitter(), {
       statusCode: 201,
     });
-    const timerResponse = new EventEmitter();
     let nextCalls = 0;
     const write = (message) => timingLogs.push(message);
     const next = () => {
@@ -387,26 +385,15 @@ export function registerContracts(candidates, selectedUnit) {
       loggerResponse,
       next,
     );
-    candidates.middleware.createRequestTimer({ write })(
-      {},
-      timerResponse,
-      next,
-    );
-    assert.equal(nextCalls, 2);
+    assert.equal(nextCalls, 1);
     assert.deepEqual(timingLogs, []);
     await new Promise((resolve) => setTimeout(resolve, 30));
     assert.deepEqual(timingLogs, []);
     loggerResponse.emit('finish');
-    timerResponse.emit('finish');
-    assert.equal(timingLogs.length, 2);
-    for (const [message, pattern] of [
-      [timingLogs[0], /^POST \/users 201 (\d+)ms$/],
-      [timingLogs[1], /^completed in (\d+)ms$/],
-    ]) {
-      const elapsed = pattern.exec(message);
-      assert.ok(elapsed);
-      assert.ok(Number(elapsed[1]) >= 20);
-    }
+    assert.equal(timingLogs.length, 1);
+    const elapsed = /^POST \/users 201 (\d+)ms$/.exec(timingLogs[0]);
+    assert.ok(elapsed);
+    assert.ok(Number(elapsed[1]) >= 20);
   });
 
   register('07', 'Express 에러 처리', async () => {

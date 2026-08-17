@@ -51,13 +51,11 @@ if (includes('05')) {
 }
 
 if (includes('06')) {
-  const [{ createApp }, { createLogger }, { createRequestTimer }] =
-    await Promise.all([
-      import('../src/practices/06-middleware/src/server.js'),
-      import('../src/practices/06-middleware/src/middlewares/logger.js'),
-      import('../src/practices/06-middleware/src/middlewares/requestTimer.js'),
-    ]);
-  candidates.middleware = { createApp, createLogger, createRequestTimer };
+  const [{ createApp }, { createLogger }] = await Promise.all([
+    import('../src/practices/06-middleware/src/server.js'),
+    import('../src/practices/06-middleware/src/middlewares/logger.js'),
+  ]);
+  candidates.middleware = { createApp, createLogger };
 }
 
 if (includes('07')) {
