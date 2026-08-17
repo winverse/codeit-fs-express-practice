@@ -11,6 +11,6 @@
 - 금지 Origin `https://evil.example` → body 형식과 관계없이 403 `{ "message": "Origin is not allowed" }`와 `Vary: Origin`, trace `cors`
 - Origin이 없으면 CORS 허용 헤더 없이 정상 처리하되 `Vary: Origin`을 응답합니다.
 - 허용 Origin의 `OPTIONS /users` → 204, `Access-Control-Allow-Origin: http://localhost:3000`, `Vary: Origin`, 필수 method·header를 포함한 CORS 헤더, trace `cors`. CORS 헤더 안의 값 순서는 의미에 영향을 주지 않습니다.
-- logger는 성공 응답이 끝날 때 실제 경과 시간을 계산하고 `POST /users 201 <정수>ms` 형식으로 기록합니다.
+- logger는 요청이 들어오면 ISO 시각·메서드·URL을 `[<ISO 시각>] POST /users` 형식으로 기록한 뒤 다음 단계로 넘깁니다.
 
-`npm run check:06`이 status·Content-Type·header·body·로그·실행 순서와 서버 종료를 확인합니다.
+`npm run check:06`이 status·Content-Type·header·body·요청 로그·실행 순서와 서버 종료를 확인합니다.

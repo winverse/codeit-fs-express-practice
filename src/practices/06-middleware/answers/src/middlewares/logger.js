@@ -1,12 +1,8 @@
 export function createLogger({ write = console.log, trace = () => {} } = {}) {
-  return (req, res, next) => {
+  return (req, _res, next) => {
     trace('logger');
-    const startedAt = Date.now();
-    res.on('finish', () => {
-      write(
-        `${req.method} ${req.originalUrl} ${res.statusCode} ${Date.now() - startedAt}ms`,
-      );
-    });
+    const timestamp = new Date().toISOString();
+    write(`[${timestamp}] ${req.method} ${req.url}`);
     next();
   };
 }

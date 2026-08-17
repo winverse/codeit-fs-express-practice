@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { EventEmitter } from 'node:events';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -368,31 +367,30 @@ export function registerContracts(candidates, selectedUnit) {
         .expect(403, { message: 'Origin is not allowed' });
       assert.deepEqual(trace.splice(0), ['cors']);
     });
-    assert.ok(logs.some((message) => /^POST \/users 201 \d+ms$/.test(message)));
+    const logPattern =
+      /^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] POST \/users$/;
+    assert.ok(logs.some((message) => logPattern.test(message)));
 
-    const timingLogs = [];
-    const loggerResponse = Object.assign(new EventEmitter(), {
-      statusCode: 201,
-    });
+    const requestLogs = [];
+    const order = [];
     let nextCalls = 0;
-    const write = (message) => timingLogs.push(message);
+    const write = (message) => {
+      requestLogs.push(message);
+      order.push('write');
+    };
     const next = () => {
       nextCalls += 1;
+      order.push('next');
     };
     candidates.middleware.createLogger({ write })(
-      { method: 'POST', originalUrl: '/users' },
-      loggerResponse,
+      { method: 'POST', url: '/users' },
+      {},
       next,
     );
     assert.equal(nextCalls, 1);
-    assert.deepEqual(timingLogs, []);
-    await new Promise((resolve) => setTimeout(resolve, 30));
-    assert.deepEqual(timingLogs, []);
-    loggerResponse.emit('finish');
-    assert.equal(timingLogs.length, 1);
-    const elapsed = /^POST \/users 201 (\d+)ms$/.exec(timingLogs[0]);
-    assert.ok(elapsed);
-    assert.ok(Number(elapsed[1]) >= 20);
+    assert.equal(requestLogs.length, 1);
+    assert.match(requestLogs[0], logPattern);
+    assert.deepEqual(order, ['write', 'next']);
   });
 
   register('07', 'Express 에러 처리', async () => {
