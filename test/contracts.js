@@ -443,7 +443,7 @@ export function registerContracts(candidates, selectedUnit) {
       assert.equal('stack' in unexpected.body, false);
     });
 
-    const httpError = new candidates.errorHandling.HttpException('Teapot', 418);
+    const httpError = new candidates.errorHandling.HttpException(418, 'Teapot');
     assert.ok(httpError instanceof Error);
     assert.equal(httpError.name, 'HttpException');
     assert.equal(httpError.statusCode, 418);
