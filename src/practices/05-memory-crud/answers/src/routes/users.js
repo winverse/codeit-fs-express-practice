@@ -3,7 +3,7 @@ import usersFixture from '../../../fixtures/users.json' with { type: 'json' };
 
 export function createUsersRouter() {
   const router = Router();
-  const users = structuredClone(usersFixture);
+  let users = structuredClone(usersFixture);
   let nextId = Math.max(...users.map((user) => user.id), 0) + 1;
 
   router.get('/', (_req, res) => {
@@ -39,13 +39,12 @@ export function createUsersRouter() {
     return res.status(200).json({ user });
   });
   router.delete('/:userId', (req, res) => {
-    const userIndex = users.findIndex(
-      ({ id }) => id === Number(req.params.userId),
-    );
-    if (userIndex === -1) {
+    const userId = Number(req.params.userId);
+    const user = users.find(({ id }) => id === userId);
+    if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    const [user] = users.splice(userIndex, 1);
+    users = users.filter(({ id }) => id !== userId);
     return res.status(200).json({ message: 'User deleted', user });
   });
 

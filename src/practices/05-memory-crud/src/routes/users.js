@@ -3,7 +3,7 @@ import usersFixture from '../../fixtures/users.json' with { type: 'json' };
 
 export function createUsersRouter() {
   const router = Router();
-  const users = structuredClone(usersFixture);
+  let users = structuredClone(usersFixture);
   // TODO: fixture의 다음 사용자 id를 계산해 nextId를 준비하세요.
 
   router.get('/', (_req, res) => {
@@ -21,7 +21,7 @@ export function createUsersRouter() {
   router.patch('/:userId', (_req, res) => {
     res.status(501).json({ message: '수정을 완성하세요.' });
   });
-  // TODO: userId로 사용자를 찾아 삭제하거나 404를 응답하세요.
+  // TODO: find()로 사용자를 찾고 filter()로 삭제하거나 404를 응답하세요.
   router.delete('/:userId', (_req, res) => {
     res.status(501).json({ message: '삭제를 완성하세요.' });
   });
