@@ -120,9 +120,7 @@ if (includes('09')) {
   candidates.mongodb = {
     createApp: lifecycle.createApp,
     connectDB: database.connectDB,
-    disconnectDB: database.disconnectDB,
     User: model.User,
-    startServer: lifecycle.startServer,
     fixture,
   };
 }

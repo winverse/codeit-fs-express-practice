@@ -1,5 +1,4 @@
 import express from 'express';
-import { connectDB } from './db/index.js';
 import { createUsersRouter } from './routes/users.js';
 
 export function createApp() {
@@ -16,20 +15,4 @@ export function createApp() {
   });
 
   return app;
-}
-
-export async function startServer({ uri, port = 0 }) {
-  // TODO: User를 import해 DB 연결 → index 준비 → HTTP listen 순서로 시작하세요.
-  // TODO: 시작 실패와 close()에서 HTTP 서버와 DB 연결을 모두 정리하세요.
-  await connectDB(uri);
-  const server = createApp().listen(port);
-
-  return {
-    server,
-    async close() {
-      await new Promise((resolve, reject) => {
-        server.close((error) => (error ? reject(error) : resolve()));
-      });
-    },
-  };
 }

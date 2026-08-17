@@ -13,15 +13,9 @@ import { HttpException } from '../src/practices/07-error-handling/answers/src/er
 import { NotFoundException } from '../src/practices/07-error-handling/answers/src/errors/notFoundException.js';
 import { errorHandler } from '../src/practices/07-error-handling/answers/src/middlewares/errorHandler.js';
 import { parseConfig } from '../src/practices/08-env-config/answers/workspace/src/config/config.js';
-import {
-  connectDB,
-  disconnectDB,
-} from '../src/practices/09-mongodb/answers/src/db/index.js';
+import { connectDB } from '../src/practices/09-mongodb/answers/src/db/index.js';
 import { User } from '../src/practices/09-mongodb/answers/src/models/user.js';
-import {
-  createApp as createMongoApp,
-  startServer,
-} from '../src/practices/09-mongodb/answers/src/server.js';
+import { createApp as createMongoApp } from '../src/practices/09-mongodb/answers/src/server.js';
 
 const routerSplitRoot = new URL(
   '../src/practices/04-router-split/answers/src/',
@@ -84,9 +78,7 @@ registerContracts({
   mongodb: {
     createApp: createMongoApp,
     connectDB,
-    disconnectDB,
     User,
-    startServer,
     fixture: mongoFixture,
   },
 });

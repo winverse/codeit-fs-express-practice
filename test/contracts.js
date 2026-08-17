@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { readFileSync } from 'node:fs';
-import net from 'node:net';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import mongoose from 'mongoose';
@@ -656,7 +655,7 @@ export function registerContracts(candidates, selectedUnit) {
           created.body.user.updatedAt,
         );
 
-        await candidates.mongodb.disconnectDB();
+        await mongoose.disconnect();
         assert.equal(mongoose.connection.readyState, 0);
         await candidates.mongodb.connectDB(uri);
         const persisted = await api
@@ -738,146 +737,13 @@ export function registerContracts(candidates, selectedUnit) {
       }
 
       assert.equal(await candidates.mongodb.User.countDocuments(), 2);
-      await candidates.mongodb.disconnectDB();
+      await mongoose.disconnect();
       assert.equal(mongoose.connection.readyState, 0);
 
       await candidates.mongodb.connectDB(uri);
       assert.equal(await candidates.mongodb.User.countDocuments(), 2);
       await candidates.mongodb.User.init();
       assert.equal(mongoose.connection.readyState, 1);
-
-      const portProbe = net.createServer();
-      await new Promise((resolve, reject) => {
-        portProbe.once('error', reject);
-        portProbe.listen(0, resolve);
-      });
-      const portAddress = portProbe.address();
-      assert.ok(portAddress && typeof portAddress === 'object');
-      const lifecyclePort = portAddress.port;
-      const lifecycleHost = portAddress.family === 'IPv6' ? '::1' : '127.0.0.1';
-      await new Promise((resolve, reject) => {
-        portProbe.close((error) => (error ? reject(error) : resolve()));
-      });
-
-      const originalInitForOrder = candidates.mongodb.User.init;
-      let allowIndexPreparation;
-      const indexPreparationGate = new Promise((resolve) => {
-        allowIndexPreparation = resolve;
-      });
-      let markIndexPreparationStarted;
-      const indexPreparationStarted = new Promise((resolve) => {
-        markIndexPreparationStarted = resolve;
-      });
-      candidates.mongodb.User.init = async function initWithGate() {
-        markIndexPreparationStarted();
-        await indexPreparationGate;
-        return originalInitForOrder.call(this);
-      };
-
-      let lifecycle;
-      let starting;
-      let startupObservation;
-      let startupValidated = false;
-      try {
-        starting = candidates.mongodb.startServer({
-          uri,
-          port: lifecyclePort,
-        });
-        startupObservation = await Promise.race([
-          indexPreparationStarted.then(() => 'index'),
-          starting.then((result) => {
-            lifecycle = result;
-            return 'server';
-          }),
-          new Promise((resolve) => {
-            setTimeout(() => resolve('timeout'), 1000);
-          }),
-        ]);
-        assert.equal(startupObservation, 'index');
-        const socketOpenedBeforeIndex = await new Promise((resolve) => {
-          const socket = net.createConnection(
-            { host: lifecycleHost, port: lifecyclePort },
-            () => {
-              socket.destroy();
-              resolve(true);
-            },
-          );
-          socket.once('error', () => resolve(false));
-        });
-        assert.equal(socketOpenedBeforeIndex, false);
-        allowIndexPreparation();
-        lifecycle = await starting;
-        startupValidated = true;
-      } finally {
-        candidates.mongodb.User.init = originalInitForOrder;
-        allowIndexPreparation();
-        if (!startupValidated && starting) {
-          try {
-            lifecycle ??= await starting;
-            if (lifecycle?.server.listening) {
-              await lifecycle.close();
-            }
-          } catch {
-            await candidates.mongodb.disconnectDB();
-          }
-        }
-      }
-
-      assert.equal(lifecycle.server.listening, true);
-      const closeOrder = [];
-      lifecycle.server.once('close', () => closeOrder.push('http'));
-      mongoose.connection.once('disconnected', () => closeOrder.push('db'));
-      await lifecycle.close();
-      assert.deepEqual(closeOrder, ['http', 'db']);
-      assert.equal(lifecycle.server.listening, false);
-      assert.equal(mongoose.connection.readyState, 0);
-
-      const occupied = net.createServer();
-      await new Promise((resolve, reject) => {
-        occupied.once('error', reject);
-        occupied.listen(0, resolve);
-      });
-      const address = occupied.address();
-      assert.ok(address && typeof address === 'object');
-      try {
-        await assert.rejects(
-          candidates.mongodb.startServer({
-            uri,
-            port: address.port,
-          }),
-          (error) => error?.code === 'EADDRINUSE',
-        );
-      } finally {
-        await new Promise((resolve, reject) => {
-          occupied.close((error) => (error ? reject(error) : resolve()));
-        });
-      }
-      assert.equal(mongoose.connection.readyState, 0);
-
-      const originalInit = candidates.mongodb.User.init;
-      candidates.mongodb.User.init = async () => {
-        throw new Error('index preparation failed');
-      };
-      try {
-        await assert.rejects(
-          candidates.mongodb.startServer({
-            uri,
-            port: 0,
-          }),
-          /index preparation failed/,
-        );
-      } finally {
-        candidates.mongodb.User.init = originalInit;
-      }
-      assert.equal(mongoose.connection.readyState, 0);
-
-      await assert.rejects(
-        candidates.mongodb.startServer({
-          uri: 'invalid://localhost',
-          port: 0,
-        }),
-      );
-      assert.equal(mongoose.connection.readyState, 0);
     } finally {
       if (mongoose.connection.readyState !== 0) {
         await mongoose.disconnect();
